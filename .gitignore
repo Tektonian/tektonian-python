@@ -1,0 +1,14 @@
+build/**
+
+tektonian_python.egg-info/**
+
+# Virtual env
+venv/**
+
+# cache
+**/__pycache__/**
+
+# duckdb temporary directory
+.tmp/**
+
+.DS_Store

@@ -1,0 +1,29 @@
+# [build-system]
+# requires = [
+#     # "hatchling",
+#     "typing_extensions"
+# ]
+# build-backend = "hatchling.build"
+
+[project]
+name = "tektonian-python"
+dynamic = ["version"]
+description = "A CLI, library, and local server for interacting with the Tektonian backend."
+authors = []
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.0.0,<3",
+    "PyYAML",
+    "platformdirs",
+    "typing_extensions>=4.8,<5",
+    "pydantic<3",
+    "eval_type_backport; python_version < '3.10'",
+    "packaging",
+    "duckdb>=1.4",
+    "pytest",
+    "numpy",
+    "pillow",
+    "opencv-python",
+]
