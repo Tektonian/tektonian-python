@@ -26,4 +26,12 @@ dependencies = [
     "numpy",
     "pillow",
     "opencv-python",
+    "boto3",
+    "supabase"
+]
+
+[dependency-groups]
+dev = [
+    "mypy==1.15.0",
+    "pylint==3.3.4",
 ]

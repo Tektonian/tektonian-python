@@ -1,0 +1,42 @@
+from enum import Enum
+from typing import List, Tuple, TypeVar, Type, Generic, MutableMapping
+from abc import ABC, abstractmethod
+from inspect import isclass, signature
+
+from .descriptor import SyncDescriptor
+from .instantiate import ServiceIdentifier
+
+
+class InstantiateType(Enum):
+    EAGER = True
+    DELAYED = False
+
+
+_registry: List[Tuple[Type[ServiceIdentifier], SyncDescriptor]] = []
+
+
+def register_singleton(
+    interface: Type[ServiceIdentifier],
+    descriptor: Type[object],
+    support_delayed_instantiation: InstantiateType = InstantiateType.DELAYED,
+):
+    if not issubclass(interface, ServiceIdentifier):
+        raise Exception("")
+
+    elif not isclass(descriptor):
+        raise Exception("")
+
+    elif not issubclass(descriptor, interface):
+        raise Exception("")
+
+    else:
+        _registry.append(
+            (
+                interface,
+                SyncDescriptor(descriptor, [], support_delayed_instantiation.value),
+            )
+        )
+
+
+def get_singleton_service_descriptors():
+    return _registry

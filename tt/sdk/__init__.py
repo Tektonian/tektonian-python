@@ -1,9 +1,29 @@
-from .tt.common.tektonian_service import TektonianService
+from tt.base.instantiate.extensions import (
+    register_singleton,
+    get_singleton_service_descriptors,
+)
+from tt.base.instantiate.service_collection import ServiceCollection
+from tt.base.instantiate.instantiate_service import InstantiateService
 
-from .recording.server.recording_service import RecordingService
+from tt.sdk.simulation_service.common.simulation_service import (
+    ISimulationManagementService,
+)
+from tt.sdk.simulation_service.remote.simulation_service import (
+    SimulationManagementService,
+)
+
+from tt.sdk.simulation_service.remote.simulation_service import Environment
+
+register_singleton(ISimulationManagementService, SimulationManagementService)
 
 
-from .recording.common.model.recording_model import RecordingModel
-from .recording.common.model.video_model import VideoModel
+services = get_singleton_service_descriptors()
+services = ServiceCollection(services)
 
-tt = TektonianService(RecordingService())
+instantiate_service = InstantiateService(services)
+
+simulation_service: ISimulationManagementService = (
+    instantiate_service.service_accessor.get(SimulationManagementService)
+)
+
+_simulation = simulation_service

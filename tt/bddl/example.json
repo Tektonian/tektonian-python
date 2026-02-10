@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "compatibility_date": "2026-02-07",
+
+  "problem": "Libero_kitchen/simple_0", // -> episode로 변경
+  "domain": "robosuite",
+  "language": "put the black bowl in the bottom",
+
+  "objects": [
+    {
+      "class": "red_coffee_mug",
+      "objects": ["red_coffee_mug_0", "red_coffee_mug_1"]
+    },
+    {
+      "class": "plate",
+      "objects": ["plate_0", "plate_1"]
+    },
+    {
+      "class": "custom_class",
+      "objects": ["custom_class_0"],
+      "path": "./custom_class/path/where_is_it"
+    }
+  ],
+
+  "sceneObjects": [
+    {
+      "class": "living_room_table",
+      "objects": ["living_room_table_0"]
+    }
+  ],
+
+  "regions": [
+    {
+      "region": "plate_0_is_next_to_reg_coffee_mug_0",
+      "x": [-0.7, 0.7],
+      "y": [1, 1],
+      "yaw": [0.0, 0.0]
+    }
+  ],
+
+  "init": [
+    {
+      "subject": "plate_0",
+      "predicate": "ontop",
+      "object": "living_room_table_0"
+    },
+    {
+      "subject": "red_coffee_mug_0",
+      "predicate": "nextto",
+      "object": "plate_0",
+      "region": "plate_0_is_next_to_reg_coffee_mug_0"
+    },
+    {
+      "subject": "plate_0",
+      "predicate": "stained"
+    }
+  ],
+
+  "goal": {
+    "anyOf": []
+  }
+}
