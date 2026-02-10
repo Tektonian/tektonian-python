@@ -1,0 +1,19 @@
+{
+    "python.linting.pylintArgs": [
+        "--init-hook",
+        "import sys; sys.path.append(\"YOUR_PATH\");",
+        "--disable",
+        "C0301" 
+    ],
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyArgs": [
+        "--follow-imports=silent",
+        "--ignore-missing-imports",
+        "--show-column-numbers",
+        "--no-pretty"
+    ],
+}

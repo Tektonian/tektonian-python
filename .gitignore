@@ -4,6 +4,8 @@ tektonian_python.egg-info/**
 
 # Virtual env
 venv/**
+.venv
+venv
 
 # cache
 **/__pycache__/**
