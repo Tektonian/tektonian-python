@@ -42,6 +42,9 @@ class InstantiateService(IInstantiateService):
 
         return ret
 
+    # Lazy proxy: https://code.activestate.com/recipes/578014-lazy-load-object-proxying/
+    # Proxy: https://web.archive.org/web/20220819152103/http://code.activestate.com/recipes/496741-object-proxying/
+
     def create_instance(self, descriptor, *non_leading_service_args):
 
         if isinstance(descriptor, SyncDescriptor):
