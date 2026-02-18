@@ -6,7 +6,7 @@ from typing import MutableMapping, List
 from websockets.sync.client import connect, ClientConnection
 import json_numpy
 import numpy
-
+import torch
 
 from tt.sdk.simulation_service.common.simulation_service import (
     ISimulationManagementService,
@@ -18,52 +18,43 @@ from tt.sdk.simulation_service.common.simulation_service import (
 # https://docs.wandb.ai/models/ref/python/experiments/run#property-run-entity
 class Environment(IEnvironment):
 
-    def __init__(self, name: str, task: str, compatibility_date: str):
+    def __init__(self, name: str, task_id: str, 
+                 compatibility_date: str, control_mode: str = "ee_pose",
+                 camera_spec: dict = {"heights": 128, "widths": 128},
+                 max_steps: int = 100
+                 ):
         self._uuid: str | None = None
         self._name = name
-        self._task = task
+        self._task_id = task_id
         self._compatibility_date = compatibility_date
         self._observation: object = None
         self._step_num: int = 0
         self._timestamp_ns: int = 0
         self._frame_idx: int = 0
         self._socket: ClientConnection
-
+        self._max_steps = max_steps
+        assert max_steps < 1000, "max_steps should be less than default(1000)"
+        assert control_mode in ["ee_pose", "joint_position"], "control_mode should be either 'ee_pose' or 'joint_position'"
+        
         self._socket = connect("ws://0.0.0.0:7777/ws")
         self._socket.send(
             json.dumps(
                 {
                     "command": "build_env",
-                    "args": {"name": self._name, "task_id": self._task, "seed": 0},
+                    "args": {
+                        "name": self._name, 
+                        "task_id": self._task_id,
+                        "control_mode": control_mode,
+                        "camera_spec": camera_spec
+                        },
                 }
             )
         )
 
-        res = self._socket.recv()
-        print(res)
+        res = json.loads(self._socket.recv())
+        self.env_id = res["env_id"]
+        
         return
-
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-        try:
-            result = new_loop.run_until_complete(self.__do_init())
-            print(result)
-        finally:
-            new_loop.close()
-
-    async def __do_init(self):
-        self._socket = connect("ws://0.0.0.0:7777/ws")
-        await self._socket.send(
-            json.dumps(
-                {
-                    "command": "build_env",
-                    "args": {"name": self._name, "task_id": self._task, "seed": 0},
-                }
-            )
-        )
-        res = await self._socket.recv(True)
-        # self._uuid = res["id"]
-        return res
 
     def snapshot(self):
         """
@@ -71,67 +62,50 @@ class Environment(IEnvironment):
         """
         return
 
-    def reset(self):
-
-        self._socket.send(json.dumps({"command": "reset", "args": {}}))
-        res = self._socket.recv()
-        print("res", res)
-        return res
-
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-        result = None
-        try:
-            result = new_loop.run_until_complete(self.__do_reset())
-            print(result)
-        finally:
-            print("close")
-            new_loop.close()
-            return result
-
-    async def __do_reset(self):
-        await self._socket.send(json.dumps({"command": "reset", "args": {}}))
-        res = await self._socket.recv()
-        print("res", res)
-        return res
-
-    def step(self, action: numpy.ndarray | List[float]):
-        self._socket.send(json.dumps({"command": "step", "args": {"action": action}}))
-
+    def reset(self, seed: int = 0):
+        self._socket.send(json.dumps({
+            "command": "reset", 
+            "args": {
+                "env_id": self.env_id,
+                "seed": seed,
+                    }
+                }))
+        
         res = json.loads(self._socket.recv())
+        obs = json_numpy.loads(res['observation'])
+        lang_instruction = res['language_instruction']
+        self._observation = obs
+        self.step_num = 0
+        return obs, lang_instruction
 
-        obs = json_numpy.loads(res["obs"])
+    def step(self, action: torch.Tensor | numpy.ndarray | List[float]):
+        if isinstance(action, torch.Tensor):
+            action = action.cpu().numpy().tolist()
+        elif isinstance(action, numpy.ndarray):
+            action = action.tolist()
+        
+        assert isinstance(action, list), f"Action must be a list of floats, got {type(action)}"
+        
+        if len(action) == 1:
+            action = action[0]
+        
+        self._socket.send(json.dumps({"command": "step", 
+                                      "args": {
+                                          "action": action}}))
+        self.step_num += 1
+        res = json.loads(self._socket.recv())
+        obs = json_numpy.loads(res["observation"])
         reward = res["reward"]
         done = res["done"]
         info = res["info"]
 
-        print(obs, reward, done, info)
+        if self.step_num >= (self._max_steps - 1):
+            done = True
+            info['TimeLimit.truncated'] = True
+            info['TimeLimit.max_episode_steps'] = self._max_steps
 
         return obs, reward, done, info
 
-        new_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(new_loop)
-        result = None
-        try:
-            result = new_loop.run_until_complete(self.__do_step(action))
-        finally:
-            new_loop.close()
-            print(result)
-            return result
-
-    async def __do_step(self, action: numpy.ndarray | List[float]):
-        await self._socket.send(
-            json.dumps({"command": "step", "args": {"action": action}})
-        )
-
-        res = await self._socket.recv()
-
-        obs = json_numpy.loads(res["obs"])
-        reward = res["reward"]
-        done = res["done"]
-        info = res["info"]
-
-        return obs, reward, done, info
 
     def close(self):
         new_loop = asyncio.new_event_loop()
