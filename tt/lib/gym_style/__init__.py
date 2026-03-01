@@ -1,18 +1,24 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import Any, Optional
+
+from tt.lib.gym_style.gym_style_environment import GymStyleEnvironment
 from tt.sdk import instantiate_service
+from tt.sdk.environment_service.common.environment_service import (
+    IEnvironmentManagementService,
+)
+from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
+from tt.sdk.simulation_service.common.simulation_service import (
+    ISimulationManagementService,
+)
+from tt.sdk.world_service.common.world_service import IWorldManagementService
 
-if TYPE_CHECKING:
-    from tt.sdk import (
-        IWorldManagementService,
-        ISimulationManagementService,
-        IEnvironmentManagementService,
-        IRunnerManagementService,
-    )
 
-
-def init_env(
-    env_uri: str, sim_id: str, seed: int | None = 0, /, **env_specific: dict[str, Any]
+def init_bench(
+    benchmark_id: str,
+    env_id: str,
+    seed: Optional[int] = 0,
+    /,
+    benchmark_specific: dict[str, Any] = {},
 ):
     """Initialize environment
 
@@ -20,33 +26,13 @@ def init_env(
         env_uri (str): Environment URI could be .json file location, remote prebuilt environment uri
         sim_id (str): _description_
     """
-    world_service: IWorldManagementService = instantiate_service.service_accessor.get(
-        IWorldManagementService
-    )
-    print("world_service", world_service)
 
-    simulation_service: ISimulationManagementService = (
-        instantiate_service.service_accessor.get(ISimulationManagementService)
-    )
-    env_service: IEnvironmentManagementService = (
-        instantiate_service.service_accessor.get(IEnvironmentManagementService)
-    )
-    print(instantiate_service._services._entries)
-    print(env_service)
-    print(simulation_service)
-
-    runner_service: IRunnerManagementService = instantiate_service.service_accessor.get(
-        IRunnerManagementService
+    env = GymStyleEnvironment(
+        instantiate_service,
+        benchmark_id,
+        env_id,
+        seed,
+        benchmark_specific=benchmark_specific,
     )
 
-    env_ret = env_service.create_environment(
-        "http://0.0.0.0", "http://0.0.0.0", "http://0.0.0.0", 0
-    )
-
-    if env_ret[0] is not None:
-        runner_ret = runner_service.create_runner(env_ret[0].id)
-        print(env_ret, runner_ret)
-
-    print(env_ret)
-
-    return env_ret[0]
+    return env
