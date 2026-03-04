@@ -38,8 +38,11 @@ class RemoteRunner(IRunner):
 
         params = urlencode(kwargs)
 
+        # self._socket = connect(
+        #     f"ws://localhost:3000/api/container/{owner}/{remote_env_id}?{params}"
+        # )
         self._socket = connect(
-            f"ws://localhost:3000/api/container/{owner}/{remote_env_id}?{params}"
+            f"ws://localhost:3000/ws"
         )
 
         msg = json.dumps({"command": "build_env", "args": self.kwargs})

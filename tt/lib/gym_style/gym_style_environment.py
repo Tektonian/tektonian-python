@@ -40,7 +40,8 @@ class GymStyleEnvironment:
             instantiate_service.service_accessor.get(IRunnerManagementService)
         )
         [owner, env_id] = benchmark_id.split("/")
-        base_url = f"http://0.0.0.0:3000/api/container/{owner}/{env_id}"
+        # base_url = f"http://0.0.0.0:3000/api/container/{owner}/{env_id}"
+        base_url = "https://localhost:3000/ws" # Docker directly
         env_ret = self.env_service.create_environment(
             base_url + "/env.json", base_url + "/act.json", base_url + "/obs.json", seed
         )
