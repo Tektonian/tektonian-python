@@ -3,17 +3,22 @@ from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
 from typing import TYPE_CHECKING
 
-import deprecated
-
+from tt.sdk.runner_service.common.runner import IRunnerFactory
 
 if TYPE_CHECKING:
     from tt.sdk.environment_service.common.model.entity import (
         EnvironmentMJCFObjectEntity,
     )
-    from tt.sdk.runner_service.common.runner import IRunner, IRunnerFactory
 
 
-class IPhysicsEngineAdapter(ABC):
+class IPhysicsEngineAdapterFactory(ABC):
+
+    @abstractmethod
+    @staticmethod
+    def create_physics_engine_adapter(env_id: str) -> IPhysicsEngineAdapter: ...
+
+
+class IPhysicsEngineAdapter(IRunnerFactory, ABC):
 
     @abstractmethod
     def initialize(self) -> IRunnerFactory: ...
