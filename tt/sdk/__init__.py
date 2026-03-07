@@ -17,6 +17,7 @@ from tt.sdk.runner_service.common.runner_service import (
     IRunnerManagementService,
     RunnerManagementService,
 )
+from tt.sdk.runner_service.remote.remote_adapter import RemoteAdapter
 from tt.sdk.simulation_service.common.simulation_service import (
     ISimulationManagementService,
     SimulationManagementService,
@@ -88,6 +89,25 @@ runner_management_service.register_physics_adapter(
     ),
 )
 
+
+class RemoteAdapterFactory(IPhysicsEngineAdapterFactory):
+    def __init__(self) -> None: ...
+    @staticmethod
+    def create_physics_engine_adapter(env_id: str) -> IPhysicsEngineAdapter:
+        return RemoteAdapter(
+            env_id,
+            log_service,
+            runner_management_service,
+            environment_management_service,
+        )
+
+
+runner_management_service.register_physics_adapter_factory(
+    ["remote"],
+    instantiate_service.create_instance(
+        RemoteAdapter,
+    ),
+)
 
 simulation_service: ISimulationManagementService = (
     instantiate_service.service_accessor.get(SimulationManagementService)
