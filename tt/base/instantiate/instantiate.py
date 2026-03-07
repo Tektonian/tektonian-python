@@ -8,6 +8,7 @@ from typing import TypeVar, Any, Type, Iterable, MutableMapping, Generic
 if TYPE_CHECKING:
     from tt.base.instantiate.descriptor import SyncDescriptor
 
+T = TypeVar("T")
 I = TypeVar("I")
 
 
@@ -26,7 +27,7 @@ See instantiate_service.py:InstantiateService._get_service_dependencies it is no
 A = TypeVar("A", bound=ABC)
 
 
-class ServiceIdentifier:
+class ServiceIdentifier(Generic[T]):
     pass
 
 
@@ -52,14 +53,14 @@ def service_identifier(identifier: str):
 
 
 @service_identifier("IInstantiateService")
-class IInstantiateService(ServiceIdentifier):
+class IInstantiateService(ServiceIdentifier[Any]):
 
     @abstractmethod
-    def create_instance[T: ServiceIdentifier](
+    def create_instance[I: ServiceIdentifier[Any]](
         self,
-        descriptor: Type[SyncDescriptor[T]],
+        ctor_or_descriptor: Type[object] | Type[SyncDescriptor[I]],
         *non_leading_service_args: tuple[Iterable[Any], ...],
-    ) -> T:
+    ) -> I:
         pass
 
     @property

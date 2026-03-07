@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Any, List, Tuple, MutableMapping, Type, TypeVar
 
 from .descriptor import SyncDescriptor
@@ -6,33 +5,44 @@ from .instantiate import ServiceIdentifier
 
 
 T = TypeVar("T")
-S = TypeVar("S", bound=ServiceIdentifier)
 
 
 class ServiceCollection:
 
     def __init__(
-        self, entries: List[Tuple[Type[ServiceIdentifier], SyncDescriptor[Any]]]
+        self,
+        entries: List[
+            Tuple[
+                Type[ServiceIdentifier[object]],
+                SyncDescriptor[ServiceIdentifier[object]],
+            ]
+        ],
     ):
-        self._entries: MutableMapping[Type[ServiceIdentifier], Any] = {}
+        self._entries: MutableMapping[
+            Type[ServiceIdentifier[object]],
+            SyncDescriptor[ServiceIdentifier[object]] | object,
+        ] = {}
 
         for k, v in entries:
             self._entries[k] = v
 
-    def set[T](
+    def set(
         self,
-        identifier: Type[ServiceIdentifier],
-        instance_or_descriptor: T | SyncDescriptor[T],
-    ) -> T | SyncDescriptor[T]:
+        identifier: Type[ServiceIdentifier[object]],
+        instance_or_descriptor: object | SyncDescriptor[ServiceIdentifier[object]],
+    ) -> object | SyncDescriptor[ServiceIdentifier[object]] | None:
         self._entries[identifier] = instance_or_descriptor
-        ret = self._entries.get(identifier)
+        ret: SyncDescriptor[ServiceIdentifier[object]] | object = self._entries.get(
+            identifier
+        )
         return ret
 
-    def has(self, identifier: Type[ServiceIdentifier]) -> bool:
+    def has(self, identifier: Type[ServiceIdentifier[Any]]) -> bool:
         ret = self._entries.get(identifier)
         return False if ret is None else True
 
-    def get[I: ServiceIdentifier](
+    def get[I: ServiceIdentifier[object]](
         self, identifier: Type[I]
-    ) -> I | SyncDescriptor[I] | None:
-        return self._entries.get(identifier)
+    ) -> object | SyncDescriptor[I] | None:
+        ret = self._entries.get(identifier)
+        return ret
