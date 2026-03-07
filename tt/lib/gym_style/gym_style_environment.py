@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class GymStyleEnvironment:
-
     def __init__(
         self,
         instantiate_service: IInstantiateService,

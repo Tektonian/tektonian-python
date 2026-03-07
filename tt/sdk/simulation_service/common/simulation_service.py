@@ -21,7 +21,6 @@ class ISimulation:
 
 @service_identifier("ISimulationManagementService")
 class ISimulationManagementService(ServiceIdentifier):
-
     _ID_PREFIX = "sim_"
 
     @property

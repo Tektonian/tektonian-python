@@ -12,14 +12,12 @@ if TYPE_CHECKING:
 
 
 class IPhysicsEngineAdapterFactory(ABC):
-
     @staticmethod
     @abstractmethod
     def create_physics_engine_adapter(env_id: str) -> IPhysicsEngineAdapter: ...
 
 
 class IPhysicsEngineAdapter(IRunnerFactory, ABC):
-
     @abstractmethod
     def initialize(self) -> None: ...
 

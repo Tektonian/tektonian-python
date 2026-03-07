@@ -60,7 +60,7 @@ class Graph(Generic[T]):
         data: list[str] = []
         for key, value in self._nodes.items():
             data.append(
-                f"{key}\n\t(-> incoming)[{",".join(value.incoming.keys())}]\n\t(outgoing ->)[{",".join(value.outgoing.keys())}]\n"
+                f"{key}\n\t(-> incoming)[{','.join(value.incoming.keys())}]\n\t(outgoing ->)[{','.join(value.outgoing.keys())}]\n"
             )
 
         return "\n ".join(data)

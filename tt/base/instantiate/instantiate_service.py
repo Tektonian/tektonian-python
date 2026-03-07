@@ -30,7 +30,6 @@ class CyclicDependencyError(BaseException):
 
 
 class InstantiateService(IInstantiateService):
-
     _global_graph: Graph[str] | None = None
     _global_graph_implicit_dependency: str | None = None
     _children: set[InstantiateService] = set()
@@ -54,7 +53,6 @@ class InstantiateService(IInstantiateService):
             if _parent is not None and _parent._global_graph is not None:
                 self._global_graph = _parent._global_graph
             else:
-
                 self._global_graph = Graph[str](lambda d: d)
 
     def _get_service_dependencies[I: object](self, ctor: Type[I]):
@@ -140,9 +138,7 @@ class InstantiateService(IInstantiateService):
 
         first_service_arg_pos = (
             # Should be service_dependencies[0][1]?
-            service_dependencies[0][1]
-            if len(service_dependencies) > 0
-            else len(args)
+            service_dependencies[0][1] if len(service_dependencies) > 0 else len(args)
         )
 
         if len(args) != first_service_arg_pos:
@@ -256,7 +252,6 @@ class InstantiateService(IInstantiateService):
             # check all dependencies for existence and if they need to be created first
             dependencies = self._get_service_dependencies(item[1].ctor)
             for dependency in dependencies:
-
                 instance_or_desc = self._get_service_instance_or_descriptor(
                     dependency[0]
                 )
@@ -314,7 +309,6 @@ class InstantiateService(IInstantiateService):
         _done = False
 
         class ServiceAccessor(IServiceAccessor):
-
             def get(self, identifier: Type[T]) -> T:
                 nonlocal _done
 
@@ -412,9 +406,9 @@ class Trace:
             return "\n".join(res)
 
         lines = [
-            f"{"CREATE" if self.type == TraceTypeEnum.CREATION else "CALL"} {self.name}",
+            f"{'CREATE' if self.type == TraceTypeEnum.CREATION else 'CALL'} {self.name}",
             f"{print_child(1, self)}",
-            f"DONE, took {dur.__format__(".4f")}ms (grand total {Trace._totals.__format__(".4f")}ms)",
+            f"DONE, took {dur.__format__('.4f')}ms (grand total {Trace._totals.__format__('.4f')}ms)",
         ]
         if (dur > 2 or caused_creation) or _ENABLE_TRACING:
             Trace.all.add("\n".join(lines))

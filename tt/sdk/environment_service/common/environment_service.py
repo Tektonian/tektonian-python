@@ -27,7 +27,6 @@ from .environment import IEnvironment
 
 @service_identifier("IEnvironmentManagementService")
 class IEnvironmentManagementService(ServiceIdentifier):
-
     _ID_PREFIX = "env_"
 
     @property

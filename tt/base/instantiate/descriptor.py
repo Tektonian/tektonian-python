@@ -5,7 +5,6 @@ T = TypeVar("T", bound=ServiceIdentifier[object])
 
 
 class SyncDescriptor(Generic[T]):
-
     def __init__(
         self,
         ctor: Type[T] | object,

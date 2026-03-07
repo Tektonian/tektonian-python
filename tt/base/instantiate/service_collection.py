@@ -8,7 +8,6 @@ T = TypeVar("T")
 
 
 class ServiceCollection:
-
     def __init__(
         self,
         entries: List[

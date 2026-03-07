@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 
 @service_identifier("IRunnerManagementService")
 class IRunnerManagementService(ServiceIdentifier):
-
     _ID_PREFIX = "run_"
 
     @property
@@ -38,7 +37,9 @@ class IRunnerManagementService(ServiceIdentifier):
 
     @abstractmethod
     def register_physics_adapter_factory(
-        self, adapter_types: List[str], adapter_factory: Type[IPhysicsEngineAdapter]
+        self,
+        adapter_types: List[str],
+        adapter_factory: Type[IPhysicsEngineAdapterFactory],
     ) -> None: ...
 
     @abstractmethod
@@ -66,9 +67,9 @@ class RunnerManagementService(IRunnerManagementService):
         self.EnvironmentManagementService = EnvironmentManagementService
         self.LogService = LogService
         self.runners: List[IRunner] = []
-        self.physics_adapter: MutableMapping[str, IPhysicsEngineAdapter] = (
-            {}
-        )  # env_id: adapter
+        self.physics_adapter: MutableMapping[
+            str, IPhysicsEngineAdapter
+        ] = {}  # env_id: adapter
         self.physics_adapter_factory: MutableMapping[  # engine: adapter_factory // e.g., {"mujoco": MujocoAdapter}
             str, Type[IPhysicsEngineAdapterFactory]
         ] = {}

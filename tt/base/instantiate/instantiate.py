@@ -54,7 +54,6 @@ def service_identifier(identifier: str):
 
 @service_identifier("IInstantiateService")
 class IInstantiateService(ServiceIdentifier[Any]):
-
     @abstractmethod
     def create_instance[I: ServiceIdentifier[Any]](
         self,
