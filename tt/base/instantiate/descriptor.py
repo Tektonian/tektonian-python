@@ -1,7 +1,7 @@
 from typing import Generic, Type, List, Any, TypeVar
 from .instantiate import ServiceIdentifier
 
-T = TypeVar("T", bound=ServiceIdentifier)
+T = TypeVar("T", bound=ServiceIdentifier[object])
 
 
 class SyncDescriptor(Generic[T]):
