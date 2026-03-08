@@ -18,15 +18,14 @@ from tt.sdk.environment_service.common.model.entity import (
     EnvironmentMJCFObjectEntity,
     EnvironmentURDFObjectEntity,
 )
+from tt.sdk.log_service.common.log_service import ILogService
 from tt.sdk.world_service.common.world_service import IWorldManagementService
-
-from tt.sdk.environment_service.remote.environment import RemoteEnvironment
 
 from .environment import IEnvironment
 
 
 @service_identifier("IEnvironmentManagementService")
-class IEnvironmentManagementService(ServiceIdentifier):
+class IEnvironmentManagementService(ServiceIdentifier["IEnvironmentManagementService"]):
     _ID_PREFIX = "env_"
 
     @property
@@ -56,7 +55,10 @@ class IEnvironmentManagementService(ServiceIdentifier):
 
 
 class EnvironmentManagementService(IEnvironmentManagementService):
-    def __init__(self, WorldManagementService: IWorldManagementService) -> None:
+    def __init__(
+        self, LogService: ILogService, WorldManagementService: IWorldManagementService
+    ) -> None:
+        self.LogService = LogService
         self.WorldManagementService = WorldManagementService
 
         self.environments: dict[str, IEnvironment] = {}
@@ -83,23 +85,13 @@ class EnvironmentManagementService(IEnvironmentManagementService):
         if world_ret[1] is not None:
             return (None, world_ret[1])
 
-        if url.scheme in ["http", "https"]:
-            env = Environment(
-                id=env_id,
-                world_id=world_ret[0].id,
-            )
-            # Auto-register the created environment
-            self.environments[env_id] = env
-            return (env, None)
-        else:
-            env = Environment(
-                id=env_id,
-                world_id=world_ret[0].id,
-            )
-            # Auto-register the created environment
-            self.environments[env_id] = env
-            return (env, None)
-            raise TektonianBaseError("Local environment class is not implemented yet")
+        env = Environment(
+            id=env_id,
+            world_id=world_ret[0].id,
+        )
+        self.environments[env_id] = env
+        self.LogService.debug(f"Environment created {env.id}")
+        return (env, None)
 
     # FIXME: for testing remove it
     def add_entity(
