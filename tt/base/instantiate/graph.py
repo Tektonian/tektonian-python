@@ -68,9 +68,9 @@ class Graph(Generic[T]):
     def __repr__(self) -> str:
         return self.to_string()
 
-    def find_cycle_slow(self):
-        for id, node in self._nodes.items():
-            seen = set[str]([id])
+    def find_cycle_slow(self) -> str | None:
+        for start_id, node in self._nodes.items():
+            seen: set[str] = {start_id}
             res = self.__find_cycle(node, seen)
 
             if res is not None:
@@ -79,13 +79,13 @@ class Graph(Generic[T]):
         return None
 
     def __find_cycle(self, node: Node[T], seen: set[str]) -> str | None:
-        for id, outgoing in node.outgoing.items():
-            if id in seen:
-                cycle = list(seen) + [id]
+        for neighbor_id, outgoing in node.outgoing.items():
+            if neighbor_id in seen:
+                cycle = list(seen) + [neighbor_id]
                 return " -> ".join(cycle)
-            seen.add(id)
+            seen.add(neighbor_id)
             value = self.__find_cycle(outgoing, seen)
             if value is not None:
                 return value
-            seen.remove(id)
+            seen.remove(neighbor_id)
         return None
