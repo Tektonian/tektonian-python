@@ -1,13 +1,18 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable, MutableMapping
 
-from tt.sdk.runner_service.common.runner import IRunner, IRunnerFactory
-from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
+import warp as wp
+import newton
+
+from tt.base.error.error import TektonianBaseError
+from tt.sdk.runner_service.common.runner import IRunner
 from tt.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
+    IPhysicsEngineAdapterState,
 )
 
 if TYPE_CHECKING:
+    from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
     from tt.sdk.environment_service.common.environment_service import (
         IEnvironmentManagementService,
     )
@@ -17,12 +22,12 @@ if TYPE_CHECKING:
 
 
 class NewtonRunner(IRunner):
-    def __init__(self, env_id: str, world_idx: int, step: Callable[..., None]) -> None:
+    def __init__(self, env_id: str, runner_idx: int, step: Callable[..., None]) -> None:
         self.runner_type = "newton"
         self.id = ""
         self.env_id = env_id
 
-        self._world_idx = world_idx
+        self._runner_idx = runner_idx
         self._step = step
 
     def initialize(self) -> None:
@@ -31,11 +36,19 @@ class NewtonRunner(IRunner):
         """
 
     def step(self, action: list[float]) -> None:
-        self._step(self._world_idx, action)
+        self._step(self._runner_idx, action)
 
+    def tick(self) -> None: ...
+
+    def clone_state(self) -> None: ...
+    def get_state(self) -> None: ...
+    def render(self) -> None: ...
+    def reset(self) -> None: ...
+    def set_state(self) -> None: ...
 
 class NewtonAdapter(IPhysicsEngineAdapter):
 
+class NewtonAdapter(IPhysicsEngineAdapter):
     def __init__(
         self,
         env_id: str,
@@ -43,16 +56,15 @@ class NewtonAdapter(IPhysicsEngineAdapter):
         RunnerManagementService: IRunnerManagementService,
         EnvironmentManagementService: IEnvironmentManagementService,
     ) -> None:
-        import newton
-        import warp
-
-        self.newton = newton
-        self.warp = warp
 
         self.env_id = env_id
         self.LogService = LogService
         self.RunnerManagementService = RunnerManagementService
         self.EnvironmentManagementService = EnvironmentManagementService
+
+        self._runner_count = 0
+        self._step_count = 0
+        self._step_count_map: MutableMapping[str, int] = dict()
 
         self.builder = newton.ModelBuilder()
         self.model: newton.Model | None = None
@@ -140,34 +152,19 @@ class NewtonAdapter(IPhysicsEngineAdapter):
             )
 
         runner = NewtonRunner(
-            env_id=self.env.id, world_idx=self._runner_count, step=runner_step
+            env_id=self.env.id, runner_idx=self._runner_count, step=runner_step
         )
 
+        new_runner_id = f"{IRunner.__ID_PREVIX}{self._runner_count}"
+        self.LogService.debug(
+            f"new newton runner created env_id: {self.env_id} runner_id: {new_runner_id}"
+        )
+        self._step_count_map[new_runner_id] = 0
         self._runner_count += 1
 
         return runner
 
-    def start(self) -> None:
-        self.model = self.builder.finalize()
-        self._solver = self.newton.solvers.SolverMuJoCo(self.model)
-        self._state_0 = self.model.state()
-        self._state_1 = self.model.state()
-        self._control = self.model.control()
-        self._contacts = self.model.contacts()
-
-    def step(self) -> None:
-        if self.model is None:
-            raise TektonianBaseError("Physics engine not initialized")
-
-        model = self.model
-        solver: newton.solvers.SolverBase = self._solver
-        state_0: newton.State = self._state_0
-        state_1: newton.State = self._state_1
-        control: newton.Control = self._control
-        contacts: newton.Contacts = self._contacts
-
-        state_0.clear_forces()
-        model.collide(state_0, contacts)
-        solver.step(state_0, state_1, control, contacts, 1.0 / 60.0 / 4.0)
-
-        state_0, state_1 = state_1, state_0
+    def get_state(self) -> IPhysicsEngineAdapterState:
+        return IPhysicsEngineAdapterState(
+            self.env_id, self._runner_count, self._step_count_map
+        )
