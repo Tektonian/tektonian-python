@@ -13,6 +13,7 @@ import time
 import json
 import imageio
 import cv2
+import math
 
 def test_result_type():
     device = torch.device("mps")  # Set device to Apple Silicon GPU
@@ -43,6 +44,9 @@ def test_result_type():
     benchmark_start_time = time.perf_counter()
     all_task_success_rates = []
     N_CHUNK = 10
+    num_steps_wait = 10  # Number of initial steps to wait before feeding observations to the policy
+    LIBERO_DUMMY_ACTION = [0.0] * 6 + [-1.0]
+
     for task_suite_name in task_suites:
         env = init_bench(
             "Tektonian/Libero",
@@ -50,6 +54,17 @@ def test_result_type():
             0,
             benchmark_specific={"control_mode": "ee_pose"},
         )
+
+        if task_suite_name == "libero_spatial":
+            max_steps = 220  # longest training demo has 193 steps
+        elif task_suite_name == "libero_object":
+            max_steps = 280  # longest training demo has 254 steps
+        elif task_suite_name == "libero_goal":
+            max_steps = 300  # longest training demo has 270 steps
+        elif task_suite_name == "libero_10":
+            max_steps = 520  # longest training demo has 505 steps
+        elif task_suite_name == "libero_90":
+            max_steps = 400  # longest training demo has 373 steps
 
         max_episodes = 50  # Number of episodes to run per task_id
         task_success_rates = []
@@ -63,9 +78,11 @@ def test_result_type():
                 start_time = time.perf_counter()
                 steps = 0
                 done = False
-                episode_success = False
-                # for _ in range(2):  # Limit to 100 steps per episode to avoid infinite loops
-                while not done:
+                while steps < max_steps + num_steps_wait:
+                    if steps < num_steps_wait:
+                        obs, reward, done, info = env.step(LIBERO_DUMMY_ACTION)
+                        steps += 1
+                        continue
                     # Preprocess observation for the policy
                     # import ipdb; ipdb.set_trace()
                     batch_input = libero_to_smolvla_obs(obs, lang, device)
@@ -96,16 +113,17 @@ def test_result_type():
                     # Postprocess action and step environment
                     action = postprocess(pred_action)
                     obs, reward, done, info = env.step(action)
-                    episode_success = episode_success or info.get("success", False)  # Track success
 
                     steps += 1
-                    print(f"{task_suite_name} Episode {episode + 1} Step {steps} done: {done} info: {info}")
+                    print(f"{task_suite_name} Episode {episode + 1} Step {steps} reward: {reward} done: {done} info: {info}")
 
-                task_successes += int(episode_success)  # Increment successes if episode was successful
+                    if done:
+                        task_successes += 1
+                        break
 
                 end_time = time.perf_counter()
 
-                gif_path = f"tests/videos/{task_suite_name}_task_{task_id}_ep_{episode}_{episode_success}.gif"
+                gif_path = f"tests/videos/{task_suite_name}_task_{task_id}_ep_{episode}_{done}.gif"
                 # turn 180 degree for better visualization
                 frames = [np.rot90(frame, k=2) for frame in frames]
                 # add lang info on the top of each frame
@@ -223,28 +241,24 @@ def libero_to_smolvla_obs(obs, lang, device) -> dict:
     eef_pos = torch.tensor(obs['robot0_eef_pos'], device=device, dtype=torch.float32)  # 3D
     quat = torch.tensor(obs['robot0_eef_quat'], device=device, dtype=torch.float32)    # 4D
     # Convert quaternion to axis-angle
-    def quat2euler(q):
-        # q: torch tensor of shape (4,)
-        w, x, y, z = q
+    def _quat2axisangle(quat):
+        """
+        Copied from robosuite: https://github.com/ARISE-Initiative/robosuite/blob/eafb81f54ffc104f905ee48a16bb15f059176ad3/robosuite/utils/transform_utils.py#L490C1-L512C55
+        """
+        # clip quaternion
+        if quat[3] > 1.0:
+            quat[3] = 1.0
+        elif quat[3] < -1.0:
+            quat[3] = -1.0
 
-        # roll (x-axis rotation)
-        t0 = 2 * (w * x + y * z)
-        t1 = 1 - 2 * (x * x + y * y)
-        roll = torch.atan2(t0, t1)
+        den = torch.sqrt(1.0 - quat[3] * quat[3])
+        if math.isclose(den, 0.0):
+            # This is (close to) a zero degree rotation, immediately return
+            return torch.zeros(3, device=device, dtype=torch.float32)
 
-        # pitch (y-axis rotation)
-        t2 = 2 * (w * y - z * x)
-        t2 = torch.clamp(t2, -1.0, 1.0)
-        pitch = torch.asin(t2)
+        return torch.tensor((quat[:3] * 2.0 * math.acos(quat[3])) / den, device=device, dtype=torch.float32)
 
-        # yaw (z-axis rotation)
-        t3 = 2 * (w * z + x * y)
-        t4 = 1 - 2 * (y * y + z * z)
-        yaw = torch.atan2(t3, t4)
-
-        return torch.stack([roll, pitch, yaw])
-
-    eef_axisangle = quat2euler(quat)  # 3D
+    eef_axisangle = _quat2axisangle(quat)  # 3D
     gripper = torch.tensor(obs['robot0_gripper_qpos'], device=device, dtype=torch.float32)  # 2D
     state = torch.cat([eef_pos, eef_axisangle, gripper], dim=-1)  # 8D
     
