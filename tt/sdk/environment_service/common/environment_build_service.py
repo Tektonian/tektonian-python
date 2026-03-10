@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, MutableMapping, Tuple, TypeVar, Union
+from urllib.parse import SplitResult
 
+from tt.base.error.error import TektonianBaseError
 from tt.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from tt.sdk.environment_service.common.environment_service import (
     IEnvironmentManagementService,
@@ -25,6 +27,13 @@ if TYPE_CHECKING:
         USDPhysicsComponent,
     )
 
+type EnvironmentEntityType = Union[
+    EnvironmentObjectEntity,
+    EnvironmentMachineEntity,
+    EnvironmentCameraEntity,
+    EnvironmentLightEntity,
+]
+
 
 @service_identifier("IEnvironmentBuildService")
 class IEnvironmentBuildService(ServiceIdentifier["IEnvironmentBuildService"]):
@@ -32,28 +41,20 @@ class IEnvironmentBuildService(ServiceIdentifier["IEnvironmentBuildService"]):
     def add_entity(
         self,
         env_id: str,
-        entity_or_uri: (
-            urllib.parse.SplitResult  # <- mostly for mjcf, urdf, or usc
-            | EnvironmentObjectEntity
-            | EnvironmentCameraEntity
-            | EnvironmentLightEntity
-            | EnvironmentMachineEntity
-        ),
+        entity: EnvironmentEntityType,
     ): ...
 
     @abstractmethod
-    def remove_entity(self, env_id: str, entity_id: str): ...
+    def remove_entity(self, entity_id: str): ...
 
     @abstractmethod
-    def replace_entity(
-        self, env_id: str, entity_id: str, render_uri: str, physics_uri: str
-    ): ...
+    def replace_entity(self, entity_id: str, render_uri: str, physics_uri: str): ...
 
     @abstractmethod
-    def change_pos(self, env_id: str, entity_id: str): ...
+    def change_pos(self, entity_id: str, pos: Tuple[float, float, float]): ...
 
     @abstractmethod
-    def change_quat(self, env_id: str, entity_id: str): ...
+    def change_quat(self, entity_id: str, quat: Tuple[float, float, float, float]): ...
 
     @abstractmethod
     def export_env_json(self) -> str: ...
@@ -80,19 +81,22 @@ class IEnvironmentBuildService(ServiceIdentifier["IEnvironmentBuildService"]):
         """
 
     @abstractmethod
-    def load_mjcf(self, path: str) -> str: ...
+    def __load_mjcf(self, path: str) -> str: ...
 
     @abstractmethod
-    def load_urdf(self, path: str) -> str: ...
+    def __load_urdf(self, path: str) -> str: ...
 
     @abstractmethod
-    def load_usd(self, path: str) -> str: ...
+    def __load_usd(self, path: str) -> str: ...
 
     @abstractmethod
     def build_env(self) -> IEnvironment: ...
 
 
 class EnvironmentBuildService(IEnvironmentBuildService):
+
+    __ID_PREFIX = "ent_"
+
     def __init__(
         self,
         EnvironmentManagementService: IEnvironmentManagementService,
@@ -100,6 +104,69 @@ class EnvironmentBuildService(IEnvironmentBuildService):
     ) -> None:
         self.EnvironmentManagementService = EnvironmentManagementService
         self.LogService = LogService
+
+        self.env_entities_map: MutableMapping[
+            str,
+            List[EnvironmentEntityType],
+        ] = {}
+
+        self.entities_map: MutableMapping[
+            str,
+            EnvironmentEntityType,
+        ] = {}
+
+    def add_entity(
+        self,
+        env_id: str,
+        entity: EnvironmentEntityType,
+    ):
+        """TODO: only support local file for now
+        1. add remote support http, https
+        2. handle each entity type
+        3. need mjcf, urdf, usd file parser
+        4. compatibility check
+        """
+        new_entity_id = f"{self.__ID_PREFIX}{len(self.entities_map)}"
+
+        env = self.__get_env(env_id)
+
+        if isinstance(entity, EnvironmentObjectEntity):
+            env.objects.append(entity)
+            self.LogService.debug(
+                f"Environment {env.id} append Object Enitty {new_entity_id}"
+            )
+        elif isinstance(entity, EnvironmentMachineEntity):
+            env.machines.append(entity)
+            self.LogService.debug(
+                f"Environment {env.id} append Machine Enitty {new_entity_id}"
+            )
+
+        self.env_entities_map[env.id].append(entity)
+        self.entities_map[new_entity_id] = entity
+
+    def change_pos(self, entity_id: str, pos: Tuple[float, float, float]):
+        entity = self.entities_map.get(entity_id, None)
+
+        if entity is None:
+            raise TektonianBaseError(f"No entity id {entity_id}")
+
+        entity.pos = pos
+
+    def change_quat(self, entity_id: str, quat: Tuple[float, float, float, float]):
+        entity = self.entities_map.get(entity_id, None)
+
+        if entity is None:
+            raise TektonianBaseError(f"No entity id {entity_id}")
+
+        entity.pos = pos
+
+    def __get_env(self, env_id: str) -> IEnvironment:
+        env_ret = self.EnvironmentManagementService.get_environment(env_id)
+
+        if env_ret[0] is None:
+            raise env_ret[1]
+
+        return env_ret[0]
 
     def __compatibility_check(
         self,
