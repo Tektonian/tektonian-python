@@ -1,5 +1,5 @@
 from __future__ import annotations  # 3.7+ 에서 필요
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union, overload
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -18,6 +18,7 @@ from tt.sdk.environment_service.common.model.entity import (
     EnvironmentMJCFObjectEntity,
     EnvironmentURDFObjectEntity,
 )
+from tt.sdk.environment_service.common.utils.mjcf_parser import parse_mjcf_path
 from tt.sdk.log_service.common.log_service import ILogService
 from tt.sdk.world_service.common.world_service import IWorldManagementService
 
@@ -41,9 +42,8 @@ class IEnvironmentManagementService(ServiceIdentifier["IEnvironmentManagementSer
 
     @abstractmethod
     def create_environment(
-        self, env_json_uri: str, act_json_url: str, obs_json_url: str, seed: int
-    ) -> ResultType[IEnvironment, BaseException]:
-        pass
+        self,
+    ) -> ResultType[IEnvironment, BaseException]: ...
 
     # FIXME: For testing remove it
     @abstractmethod
@@ -73,10 +73,7 @@ class EnvironmentManagementService(IEnvironmentManagementService):
             return (None, TektonianBaseError("no environment found"))
         return (env, None)
 
-    def create_environment(
-        self, env_json_uri: str, act_json_url: str, obs_json_url: str, seed: int
-    ):
-        url = urlsplit(env_json_uri)
+    def create_environment(self) -> ResultType[IEnvironment, BaseException]:
 
         env_id = f"{self._ID_PREFIX}{len(self._environments)}"
 
