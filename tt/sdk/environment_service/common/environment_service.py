@@ -1,5 +1,5 @@
 from __future__ import annotations  # 3.7+ 에서 필요
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, Union, overload
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -14,10 +14,7 @@ from tt.sdk.environment_service.common.model.component import (
     URDFPhysicsComponent,
     USDPhysicsComponent,
 )
-from tt.sdk.environment_service.common.model.entity import (
-    EnvironmentMJCFObjectEntity,
-    EnvironmentURDFObjectEntity,
-)
+
 from tt.sdk.log_service.common.log_service import ILogService
 from tt.sdk.world_service.common.world_service import IWorldManagementService
 
@@ -41,16 +38,15 @@ class IEnvironmentManagementService(ServiceIdentifier["IEnvironmentManagementSer
 
     @abstractmethod
     def create_environment(
-        self, env_json_uri: str, act_json_url: str, obs_json_url: str, seed: int
-    ) -> ResultType[IEnvironment, BaseException]:
-        pass
+        self, engine: Literal["mujoco", "newton", "genesis"] = "mujoco"
+    ) -> ResultType[IEnvironment, BaseException]: ...
 
     # FIXME: For testing remove it
     @abstractmethod
     def add_entity(
         self,
         env_id: str,
-        entity: EnvironmentMJCFObjectEntity | EnvironmentURDFObjectEntity,
+        entity: MJCFPhysicsComponent | URDFPhysicsComponent | USDPhysicsComponent,
     ): ...
 
 
@@ -74,9 +70,8 @@ class EnvironmentManagementService(IEnvironmentManagementService):
         return (env, None)
 
     def create_environment(
-        self, env_json_uri: str, act_json_url: str, obs_json_url: str, seed: int
-    ):
-        url = urlsplit(env_json_uri)
+        self, engine: Literal["mujoco", "newton", "genesis"] = "mujoco"
+    ) -> ResultType[IEnvironment, BaseException]:
 
         env_id = f"{self._ID_PREFIX}{len(self._environments)}"
 
@@ -88,6 +83,7 @@ class EnvironmentManagementService(IEnvironmentManagementService):
         env = Environment(
             id=env_id,
             world_id=world_ret[0].id,
+            default_engine=engine,
         )
         self.environments[env_id] = env
         self.LogService.debug(f"Environment created {env.id}")
@@ -109,7 +105,12 @@ class EnvironmentManagementService(IEnvironmentManagementService):
 
 
 class Environment(IEnvironment):
-    def __init__(self, id: str, world_id: str) -> None:
+    def __init__(
+        self,
+        id: str,
+        world_id: str,
+        default_engine: Literal["mujoco", "newton", "genesis"],
+    ) -> None:
         self.id = id
         self.world_id = world_id
 
@@ -117,7 +118,7 @@ class Environment(IEnvironment):
         self.act_json_uri = ""
         self.obs_json_uri = ""
 
-        self.physics_engine = "mujoco"
+        self.physics_engine = default_engine
 
         self.objects = []
 

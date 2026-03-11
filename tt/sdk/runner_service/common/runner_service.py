@@ -67,9 +67,9 @@ class RunnerManagementService(IRunnerManagementService):
         self.EnvironmentManagementService = EnvironmentManagementService
         self.LogService = LogService
         self.runners: List[IRunner] = []
-        self.physics_adapter: MutableMapping[
-            str, IPhysicsEngineAdapter
-        ] = {}  # env_id: adapter
+        self.physics_adapter: MutableMapping[str, IPhysicsEngineAdapter] = (
+            {}
+        )  # env_id: adapter
         self.physics_adapter_factory: MutableMapping[  # engine: adapter_factory // e.g., {"mujoco": MujocoAdapter}
             str, Type[IPhysicsEngineAdapterFactory]
         ] = {}
@@ -105,7 +105,6 @@ class RunnerManagementService(IRunnerManagementService):
         # check adapter exist
         adapter = self.physics_adapter.get(env_id)
         if adapter is not None:
-            adapter.initialize()
             runner = adapter.create_runner()
             self.runners.append(runner)
             return (runner, None)
@@ -133,7 +132,6 @@ class RunnerManagementService(IRunnerManagementService):
                 return (None, TektonianBaseError(f"No proper adaptor for mujoco"))
 
             adapter = factory.create_physics_engine_adapter(env.id)
-            adapter.initialize()
             self.physics_adapter[env.id] = adapter
             runner = adapter.create_runner()
             runner.initialize()

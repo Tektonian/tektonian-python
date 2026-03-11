@@ -6,6 +6,10 @@ from tt.base.instantiate.extensions import (
 )
 from tt.base.instantiate.service_collection import ServiceCollection
 from tt.base.instantiate.instantiate_service import InstantiateService
+from tt.sdk.environment_service.common.environment_build_service import (
+    EnvironmentBuildService,
+    IEnvironmentBuildService,
+)
 from tt.sdk.environment_service.common.environment_service import (
     EnvironmentManagementService,
     IEnvironmentManagementService,
@@ -36,7 +40,7 @@ register_singleton(ISimulationManagementService, SimulationManagementService)
 register_singleton(IRunnerManagementService, RunnerManagementService)
 register_singleton(IWorldManagementService, WorldManagementService)
 register_singleton(IEnvironmentManagementService, EnvironmentManagementService)
-
+register_singleton(IEnvironmentBuildService, EnvironmentBuildService)
 
 services = get_singleton_service_descriptors()
 services = ServiceCollection(services)
@@ -49,6 +53,9 @@ runner_management_service: IRunnerManagementService = (
 log_service: ILogService = instantiate_service.service_accessor.get(ILogService)
 environment_management_service: IEnvironmentManagementService = (
     instantiate_service.service_accessor.get(IEnvironmentManagementService)
+)
+environment_build_service: IEnvironmentBuildService = (
+    instantiate_service.service_accessor.get(identifier=IEnvironmentBuildService)
 )
 
 
