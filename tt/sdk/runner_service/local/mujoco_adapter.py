@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABCMeta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, MutableMapping
 
 import mujoco
 import mujoco.viewer
@@ -11,6 +11,7 @@ from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
 
 from tt.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
+    IPhysicsEngineAdapterState,
 )
 
 if TYPE_CHECKING:
@@ -61,14 +62,17 @@ MUJOCO_SCENE = """
 class MujocoRunner(IRunner):
     def __init__(
         self,
+        runner_id: str,
         env_id: str,
         mj_model: mujoco.MjModel,
+        on_after_call_step: Callable[[str], None],
     ) -> None:
         self.runner_type = "mujoco"
-        self.id = ""
+        self.runner_id = runner_id
         self.mj_model = mj_model
         self.env_id = env_id
         self.state = {}
+        self.on_after_call_step = on_after_call_step
 
         self._data: mujoco.MjData | None = None
 
@@ -82,6 +86,8 @@ class MujocoRunner(IRunner):
         self._data.ctrl = action
 
         mujoco.mj_step(self.mj_model, self._data)
+
+        self.on_after_call_step(self.runner_id)
 
     def tick(self) -> None:
         mujoco.mj_step(self.mj_model, self._data)
@@ -123,13 +129,15 @@ class MujocoAdapter(IPhysicsEngineAdapter):
         self.RunnerManagementService = RunnerManagementService
         self.EnvironmentManagementService = EnvironmentManagementService
 
+        self._runner_count = 0
+        self._step_count = 0
+        self._step_count_map: MutableMapping[str, int] = dict()
+
         self.root_spec = mujoco.MjSpec.from_string(MUJOCO_SCENE)
         self.root_frame = self.root_spec.worldbody.add_frame()
 
         self.model: mujoco.MjModel | None = None
         self.data: mujoco.MjData | None = None
-
-    def initialize(self):
 
         env_ret = self.EnvironmentManagementService.get_environment(self.env_id)
 
@@ -161,31 +169,36 @@ class MujocoAdapter(IPhysicsEngineAdapter):
         self.model = self.root_spec.compile()
 
     def create_runner(self) -> IRunner:
+        if self._step_count != 0:
+            raise TektonianBaseError(
+                "Cannot create new runner after calling step() function"
+            )
 
         if self.model is None:
             raise TektonianBaseError("Adapter not initialized")
 
-        runner = MujocoRunner(self.env_id, mj_model=self.model)
+        def on_after_runner_step(runner_id: str):
+            self._step_count_map[runner_id] += 1
+            self._step_count += 1
+
+        new_runner_id = f"run_{self._runner_count}"
+
+        runner = MujocoRunner(
+            new_runner_id,
+            self.env_id,
+            mj_model=self.model,
+            on_after_call_step=on_after_runner_step,
+        )
+
+        self.LogService.debug(
+            f"new mujoco runner created env_id: {self.env_id} runner_id: {new_runner_id}"
+        )
+        self._step_count_map[new_runner_id] = 0
+        self._runner_count += 1
 
         return runner
 
-    def start(self) -> None:
-        model: mujoco.MjModel = self.root_spec.compile()
-        self.data = mujoco.MjData(model)
-        self.model = model
-
-    def step(self) -> None:
-        if self.model is None or self.data is None:
-            raise TektonianBaseError("Physics engine not initialized")
-
-        mujoco.mj_step(self.model, self.data)
-
-    def reset(self) -> None:
-        if self.model is None or self.data is None:
-            raise TektonianBaseError("Physics engine not initialized")
-
-        mujoco.mj_resetData(self.model, self.data)
-
-    def get_state(self, obj_id: int) -> object: ...
-
-    def stop(self) -> None: ...
+    def get_state(self) -> IPhysicsEngineAdapterState:
+        return IPhysicsEngineAdapterState(
+            self.env_id, self._runner_count, self._step_count_map
+        )

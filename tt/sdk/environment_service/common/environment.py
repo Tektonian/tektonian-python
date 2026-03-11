@@ -47,8 +47,8 @@ class IEnvironment(ABC):
     soft_bodies: list[EnvironmentMJCFObjectEntity | EnvironmentURDFObjectEntity] = (
         field(default_factory=list)
     )
-    randoms: list[dict[str, dict[str, dict[str, str]]]]
-    constraints: list[dict[str, str]]
+    randoms: list[dict[str, dict[str, dict[str, str]]]] = field(default_factory=list)
+    constraints: list[dict[str, str]] = field(default_factory=list)
 
     # end-region
     @abstractmethod

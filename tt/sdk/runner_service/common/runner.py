@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 @dataclass
 class IRunner(ABC):
+    __ID_PREVIX = "run_"
+
     runner_type: str
     id: str
     env_id: str

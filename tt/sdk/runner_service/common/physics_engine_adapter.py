@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, MutableMapping
 from tt.sdk.runner_service.common.runner import IRunnerFactory
 
 if TYPE_CHECKING:
@@ -17,21 +18,14 @@ class IPhysicsEngineAdapterFactory(ABC):
     def create_physics_engine_adapter(env_id: str) -> IPhysicsEngineAdapter: ...
 
 
+@dataclass(frozen=True)
+class IPhysicsEngineAdapterState:
+    env_id: str
+    runner_count: int
+    step_count_map: MutableMapping[str, int]
+
+
 class IPhysicsEngineAdapter(IRunnerFactory, ABC):
-    @abstractmethod
-    def initialize(self) -> None: ...
 
     @abstractmethod
-    def start(self) -> None: ...
-
-    @abstractmethod
-    def stop(self) -> None: ...
-
-    @abstractmethod
-    def step(self) -> None: ...
-
-    @abstractmethod
-    def reset(self) -> None: ...
-
-    @abstractmethod
-    def get_state(self, obj_id: int) -> object: ...
+    def get_state(self) -> IPhysicsEngineAdapterState: ...
