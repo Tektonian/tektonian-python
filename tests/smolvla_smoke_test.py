@@ -48,29 +48,40 @@ def read_shapes_from_policy_preprocessor(repo_dir: Path):
     """
     policy_preprocessor.json이 있으면 거기서 image/state/action shape를 읽고,
     없으면 (3,256,256), state=8, action=7로 fallback.
+    이미지가 없을 수도 있으니 None으로 반환.
     """
     pp = repo_dir / "policy_preprocessor.json"
     if not pp.exists():
-        return (3, 256, 256), (3, 256, 256), 8, 7
+        Warning(f"policy_preprocessor.json not found in {repo_dir}, using default shapes")
+        return None, None, None, None
 
     data = json.loads(pp.read_text())
+    img_shapes = []
+    st = None
+    act = None
     for step in data.get("steps", []):
         if step.get("registry_name") == "normalizer_processor":
             feats = step.get("config", {}).get("features", {})
-            img1 = feats.get("observation.images.image", {}).get("shape", [3, 256, 256])
-            img2 = feats.get("observation.images.image2", {}).get("shape", [3, 256, 256])
+            for k, v in feats.items():
+                if k.startswith("observation.images."):
+                    shape = v.get("shape", None)
+                    if shape is not None:
+                        img_shapes.append(tuple(shape))
             st = feats.get("observation.state", {}).get("shape", [8])
             act = feats.get("action", {}).get("shape", [7])
-            return tuple(img1), tuple(img2), int(st[0]), int(act[0])
+            break
 
-    return (3, 256, 256), (3, 256, 256), 8, 7
+    return dict(image=img_shapes if len(img_shapes) > 0 else None,
+                state=tuple(st) if st is not None else None,
+                action=tuple(act) if act is not None else None)
 
 
 def main():
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     patch_draccus_non_callable_types()
 
-    model_id = "HuggingFaceVLA/smolvla_libero"
+    # model_id = "HuggingFaceVLA/smolvla_libero"
+    model_id = "jadechoghari/smolvla_metaworld"
 
     # ✅ macOS면 mps 우선
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -81,13 +92,8 @@ def main():
 
     # 1) repo 다운로드(로컬에서 policy_preprocessor/config 확인용)
     local_dir = Path(snapshot_download(repo_id=model_id))
-    img1_shape, img2_shape, state_dim, action_dim = read_shapes_from_policy_preprocessor(local_dir)
-
-    print("expected:",
-          "image", img1_shape,
-          "image2", img2_shape,
-          "state_dim", state_dim,
-          "action_dim", action_dim)
+    shapes = read_shapes_from_policy_preprocessor(local_dir)
+    print("expected shapes:", shapes)
 
     mps_mem("before load")
 
@@ -105,14 +111,23 @@ def main():
     print(preprocess)
 
     # ✅ LeRobot preprocessor는 "batch" 형식(평탄화된 observation.* 키)을 받음
+    
+    # Create a dummy batch for Libero 
+    # batch = {
+    #     "observation.images.image": torch.zeros(*img1_shape, device=device, dtype=dtype),
+    #     "observation.images.image2": torch.zeros(*img2_shape, device=device, dtype=dtype),
+    #     "observation.state": torch.zeros(state_dim, device=device, dtype=dtype),
+    #     # SmolVLA tokenizer preprocessor requires complementary_data["task"].
+    #     "task": "pick up the object",
+    # }
+
+    # Create a dummy batch for Metaworld
     batch = {
-        "observation.images.image": torch.zeros(*img1_shape, device=device, dtype=dtype),
-        "observation.images.image2": torch.zeros(*img2_shape, device=device, dtype=dtype),
-        "observation.state": torch.zeros(state_dim, device=device, dtype=dtype),
-        # SmolVLA tokenizer preprocessor requires complementary_data["task"].
+        "observation.image": torch.zeros((3,480,480), device=device, dtype=dtype),
+        "observation.state": torch.zeros(*shapes["state"], device=device, dtype=dtype),
         "task": "pick up the object",
     }
-
+    
     obs_proc = preprocess(batch)
 
     mps_mem("after preprocess")
@@ -120,6 +135,9 @@ def main():
     with torch.inference_mode():
         # ✅ SmolVLA 정책은 예제에서 select_action()을 사용
         action = model.select_action(obs_proc)
+        # ✅ 하지만 내부적으로는 predict_action_chunk()이 실제 forward를 담당하므로, 직접 호출해보기도 함
+        chunks = model.predict_action_chunk(obs_proc)
+        
 
     action = postprocess(action)
 

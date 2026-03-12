@@ -28,9 +28,15 @@ class GymStyleEnvironment:
 
         # region [Libero]
         # TODO: mapping task_name to task_id
-        self.benchmark_specific["task_name"] = remote_env_id
+        # task_id = f"{suite_id}/{task_id}"
+        self.benchmark_specific["env_id"] = remote_env_id
         # self.benchmark_specific["task_id"] = 0
         self.benchmark_specific["seed"] = seed
+        # endregion
+
+        # region [Metaworld]
+        # task_id = f"{suite_id}/{task_id}"
+        self.benchmark_specific["env_id"] = remote_env_id
         # endregion
 
         self.env_service: IEnvironmentManagementService = (
