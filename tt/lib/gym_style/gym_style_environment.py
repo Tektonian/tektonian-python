@@ -1,5 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any, MutableMapping, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed, Future
+import json
+
+from websockets.sync.client import connect, ClientConnection
+import json_numpy
 
 from tt.base.error.error import TektonianBaseError
 from tt.sdk.environment_service.common.environment_service import (
@@ -11,77 +16,114 @@ from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
 if TYPE_CHECKING:
     from tt.base.instantiate.instantiate import IInstantiateService
 
+type GymEnvStepReturnType = Tuple[
+    dict[str, Any],  # obs
+    dict[str, Any],  # reward
+    bool,  # termination
+    bool,  # truncation
+    dict[str, Any],  # info
+]
 
-class GymStyleEnvironment:
+
+class BenchmarkEnvironment:
     def __init__(
         self,
-        instantiate_service: IInstantiateService,
+        runner_id: str,
         benchmark_id: str,
         remote_env_id: str,
         seed: int,
-        benchmark_specific: dict[str, Any],
-    ) -> None:
+        benchmark_specific_kwards: dict[str, Any],
+    ):
+        self.runner_id = runner_id
         self.benchmark_id = benchmark_id
         self.remote_env_id = remote_env_id
-        self.benchmark_specific = benchmark_specific
+        self.benchmark_specific_kwards = benchmark_specific_kwards
 
-        # region FIXME: Remove later [Libero]
-        self.benchmark_specific["task_name"] = remote_env_id
-        self.benchmark_specific["task_id"] = 0
-        self.benchmark_specific["seed"] = seed
-        # endregion
+        self._socket: ClientConnection | None = None
 
-        self.env_service: IEnvironmentManagementService = (
-            instantiate_service.service_accessor.get(IEnvironmentManagementService)
+    def _connect(self):
+
+        if self._socket:
+            return
+
+        self._socket = connect(
+            f"ws://localhost:3000/api/container/{self.benchmark_id}/{self.remote_env_id}?"
         )
-
-        self.runner_service: IRunnerManagementService = (
-            instantiate_service.service_accessor.get(IRunnerManagementService)
+        msg = json.dumps(
+            {"command": "build_env", "args": self.benchmark_specific_kwards}
         )
-        [owner, env_id] = benchmark_id.split("/")
-        base_url = f"http://0.0.0.0:3000/api/container/{owner}/{env_id}"
-        env_ret = self.env_service.create_environment(
-            base_url + "/env.json", base_url + "/act.json", base_url + "/obs.json", seed
-        )
+        self._socket.send(msg)
+        recv = json_numpy.loads(self._socket.recv())
+        print("connect")
 
-        if env_ret[0] is not None:
-            self.env = env_ret[0]
-            self.runner: None | IRunner = None
-        else:
-            raise env_ret[1]
+    def step(self, action: list[float]) -> GymEnvStepReturnType:
 
-    def step(self, action: object) -> object:
-        if self.runner is None:
-            raise TektonianBaseError("Environment not reset")
-        return self.runner.step(action)
+        if self._socket is None:
+            self._connect()
 
-    def reset(
-        self, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> None:
-        """Reset runner
+        self._socket.send(json.dumps({"command": "step", "args": {"action": action}}))
 
-        Raises:
-            runner_ret: _description_
+        recv = json_numpy.loads(self._socket.recv())
+        print("recv")
+        return recv
+
+    def reset(self):
+
+        if self._socket is None:
+            self._connect()
+
+        self._socket.send(json.dumps({"command": "reset", "args": {}}))
+        recv = self._socket.recv()
+        return recv
+
+    def close(self):
+        if self._socket:
+            self._socket.close()
+
+    @property
+    def action_space(self): ...
+    @property
+    def observation_space(self): ...
+
+
+class BenchmarkVecEnvironment:
+    def __init__(self, benchmark_envs: list[BenchmarkEnvironment]) -> None:
+        self.benchmark_envs = benchmark_envs
+
+    def step(self, actions: list[list[float]]) -> list[GymEnvStepReturnType]:
+        """Send step to all envs concurrently and gather responses.
+        Results are returned in the same order as the provided `envs` list.
         """
-        if self.runner is not None:
-            self.runner_service.remove_runner(self.runner.id)
 
-        if seed is None:
-            seed = 0
+        if not self.benchmark_envs:
+            return []
 
-        self.benchmark_specific["seed"] = seed
+        for env in self.benchmark_envs:
+            if env._socket is None:
+                env._connect()
 
-        runner_ret: Tuple[IRunner, None] | Tuple[None, BaseException] = (
-            self.runner_service.create_runner(self.env.id, self.benchmark_specific)
-        )
-        if runner_ret[0] is not None:
-            self.runner = runner_ret[0]
-        else:
-            raise runner_ret[1]
+        # Phase 1: send in parallel
+        def _send_payload(r: BenchmarkEnvironment, action: list[float]) -> None:
+            payload: dict[str, Any] = {"command": "step", "args": {"action": action}}
+            print("thread send")
+            r._socket.send(json.dumps(payload))  # type: ignore[union-attr]
 
-    def render(self) -> None: ...
+        with ThreadPoolExecutor(max_workers=len(self.benchmark_envs)) as ex:
+            send_futs = [
+                ex.submit(_send_payload, r[0], r[1])
+                for r in zip(self.benchmark_envs, actions)
+            ]
+            # Ensure all sends complete (propagate any exceptions)
+            for f in as_completed(send_futs):
+                f.result()
 
-    def close(self) -> None:
-        if self.runner:
-            self.runner_service.remove_runner(self.runner.id)
-        self.runner = None
+            # Phase 2: recv in parallel, maintain order
+            index_map = {ex.submit(lambda rr=r: rr._socket.recv()): i for i, r in enumerate(self.benchmark_envs)}  # type: ignore[union-attr]
+            results: list[Any] = [None] * len(self.benchmark_envs)
+            for f in as_completed(index_map):
+                idx = index_map[f]
+                results[idx] = f.result()
+
+        return results
+
+    def reset_parallel(self): ...

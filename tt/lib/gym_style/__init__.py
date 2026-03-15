@@ -1,21 +1,29 @@
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Any, Optional, overload
 
-from tt.lib.gym_style.gym_style_environment import GymStyleEnvironment
 from tt.sdk import instantiate_service
-from tt.sdk.environment_service.common.environment_service import (
-    IEnvironmentManagementService,
-)
-from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
-from tt.sdk.simulation_service.common.simulation_service import (
-    ISimulationManagementService,
-)
-from tt.sdk.world_service.common.world_service import IWorldManagementService
+from .gym_style_environment import BenchmarkEnvironment, BenchmarkVecEnvironment
 
 
+@overload
 def init_bench(
     benchmark_id: str,
     env_id: str,
+    seed: Optional[int] = 0,
+    /,
+    benchmark_specific: dict[str, Any] = {},
+) -> BenchmarkEnvironment: ...
+@overload
+def init_bench(
+    benchmark_id: str,
+    env_id: None,
+    seed: Optional[int] = 0,
+    /,
+    benchmark_specific: dict[str, Any] = {},
+) -> BenchmarkVecEnvironment: ...
+def init_bench(
+    benchmark_id: str,
+    env_id: Optional[str],
     seed: Optional[int] = 0,
     /,
     benchmark_specific: dict[str, Any] = {},
@@ -27,12 +35,21 @@ def init_bench(
         sim_id (str): _description_
     """
 
-    env = GymStyleEnvironment(
-        instantiate_service,
+    if env_id is None:
+        vec_env = BenchmarkVecEnvironment([])
+        return vec_env
+
+    env = BenchmarkEnvironment(
+        "id",
         benchmark_id,
         env_id,
         seed,
-        benchmark_specific=benchmark_specific,
+        benchmark_specific,
     )
 
     return env
+
+
+def make_vec(envs: list[BenchmarkEnvironment]):
+    vec_env = BenchmarkVecEnvironment(envs)
+    return vec_env
