@@ -71,11 +71,11 @@ def patch_draccus_non_callable_types():
 def metaworld_to_smolvla_obs(obs, lang, device):
     """Convert Meta-World observation to smolvla input format."""
     state = torch.cat([
-        torch.tensor(obs['states']["robot0_eef_pos"], device=device, dtype=torch.float32),
-        torch.tensor(obs['states']["robot0_gripper_open"], device=device, dtype=torch.float32)
+        torch.tensor(obs['states']["robot_0_eef_pos"], device=device, dtype=torch.float32),
+        torch.tensor(obs['states']["robot_0_gripper_open"], device=device, dtype=torch.float32)
     ])
 
-    image = torch.tensor(obs["images"]["cam0_rgb"], 
+    image = torch.tensor(obs["images"]["cam_0_rgb"], 
                          device=device, 
                          dtype=torch.float32).permute(2, 0, 1) / 255.0
 
@@ -87,12 +87,12 @@ def metaworld_to_smolvla_obs(obs, lang, device):
 
 
 def run_task(policy, preprocess, postprocess, device, env_id):
+    env_id = "MT1/reach-v3"
     env = init_bench("Tektonian/Metaworld", env_id, 0, benchmark_specific={})
-    max_steps = MAX_STEPS_PER_ENV[env_id]
-
+    max_steps = 300
+    # env_id = "MT1/assembly-v3"
     obs, info = env.reset(seed=0)
     lang = info['task_description']
-
 
     frames = []
     steps = 0

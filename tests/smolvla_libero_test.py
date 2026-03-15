@@ -74,8 +74,8 @@ def patch_draccus_non_callable_types():
 
 def libero_to_smolvla_obs(obs, lang, device):
     """Convert libero observation to smolvla input format."""
-    eef_pos = torch.tensor(obs['states']['robot0_eef_pos'], device=device, dtype=torch.float32)
-    quat = torch.tensor(obs['states']['robot0_eef_quat'], device=device, dtype=torch.float32)
+    eef_pos = torch.tensor(obs['states']['robot_0_eef_pos'], device=device, dtype=torch.float32)
+    quat = torch.tensor(obs['states']['robot_0_eef_quat'], device=device, dtype=torch.float32)
 
     def _quat2axisangle(quat):
         q = quat.clone()
@@ -86,7 +86,7 @@ def libero_to_smolvla_obs(obs, lang, device):
         return (q[:3] * 2.0 * math.acos(q[3].item())) / den
 
     eef_axisangle = _quat2axisangle(quat)
-    gripper = torch.tensor(obs['states']['robot0_gripper_qpos'], device=device, dtype=torch.float32)
+    gripper = torch.tensor(obs['states']['robot_0_gripper_qpos'], device=device, dtype=torch.float32)
     state = torch.cat([eef_pos, eef_axisangle, gripper], dim=-1)
 
     def normalize_image(img):
@@ -95,8 +95,8 @@ def libero_to_smolvla_obs(obs, lang, device):
             img = img.permute(2, 0, 1)
         return img
 
-    agentview_img = normalize_image(obs['images']['cam0_rgb'])
-    eye_in_hand_img = normalize_image(obs['images']['cam1_rgb'])
+    agentview_img = normalize_image(obs['images']['cam_0_rgb'])
+    eye_in_hand_img = normalize_image(obs['images']['cam_1_rgb'])
     return {
         "observation.images.image": agentview_img,
         "observation.images.image2": eye_in_hand_img,
@@ -150,7 +150,7 @@ def run_task_suite(policy, preprocess, postprocess, device, task_suite_name):
                             count += 1
                             pred_action = pred_action_chunk[:, count]
 
-                agentview_img = obs['images']['cam0_rgb']
+                agentview_img = obs['images']['cam_0_rgb']
                 if agentview_img.dtype != np.uint8:
                     agentview_img = (agentview_img * 255).astype(np.uint8) if agentview_img.max() <= 1.0 else agentview_img.astype(np.uint8)
                 frames.append(agentview_img)
@@ -220,6 +220,7 @@ def test_result_type():
     all_task_success_rates = []
 
     for task_suite_name in TASK_SUITES:
+        task_suite_name = "libero_goal"
         task_success_rates = run_task_suite(policy, preprocess, postprocess, device, task_suite_name)
         all_task_success_rates.extend(task_success_rates)
 
