@@ -48,6 +48,7 @@ class ParsedGeom:
             tid=self.tid,
             name=self.name,
             solimp=self.solimp,
+            solmix=self.solmix,
             solref=self.solref,
             friction=self.friction,
         )
