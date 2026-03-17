@@ -358,7 +358,7 @@ class Trace:
         if _enable_tracing is True:
             return Trace(TraceTypeEnum.INVORATION, ctor)
         else:
-            return __NoneTrace()
+            return _NoneTrace()
 
     @staticmethod
     def trace_creation(_enable_tracing: bool, ctor: object) -> Trace:
@@ -370,7 +370,7 @@ class Trace:
         if _enable_tracing is True:
             return Trace(TraceTypeEnum.CREATION, ctor)
         else:
-            return __NoneTrace()
+            return _NoneTrace()
 
     _totals = 0
 
@@ -417,7 +417,7 @@ class Trace:
             print("\n".join(lines))
 
 
-class __NoneTrace(Trace):
+class _NoneTrace(Trace):
     def __init__(self) -> None:
         pass
 
