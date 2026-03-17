@@ -39,20 +39,12 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "requests>=2.0.0,<3",
-    "PyYAML",
-    "platformdirs",
     "typing_extensions>=4.8,<5",
     "pydantic<3",
     "eval_type_backport; python_version < '3.10'",
     "packaging",
     "duckdb>=1.4",
     "pytest",
-    "numpy",
-    "pillow",
-    "opencv-python",
-    "boto3",
-    "supabase",
     "structlog>=25.5.0",
     "posthog>=7.8.5",
     "json-numpy>=2.1.1",
@@ -83,6 +75,9 @@ dev = [
     "mypy==1.15.0",
     "pylint==3.3.4",
     "ruff>=0.15.5",
+    "numpy",
+    "pillow",
+    "opencv-python",
 ]
 
 [tool.ruff.lint]
