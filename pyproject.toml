@@ -54,6 +54,8 @@ dependencies = [
     "websockets>=15.0.1",
 ]
 
+mujoco-typegen = "scripts.mujoco_typegen:main"
+
 [project.urls]
 Homepage = "https://tektonian.com"
 Repository = "https://github.com/Tektonian/tektonian-python"
@@ -75,6 +77,7 @@ dev = [
     "mypy==1.15.0",
     "pylint==3.3.4",
     "ruff>=0.15.5",
+    "pybind11-stubgen>=2.5.5",
     "numpy",
     "pillow",
     "opencv-python",
@@ -84,9 +87,15 @@ dev = [
 select = ["E", "F", "I002", "TC004"]
 ignore = ["F401"]
 
+[tool.pyright]
+stubPath = ".typings"
+
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
 
 
 [tool.setuptools]
 py-modules = []
+
+[tool.setuptools.packages.find]
+include = ["tt*", "scripts"]
