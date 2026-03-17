@@ -46,6 +46,7 @@ jobs:
             test
             base
             server
+            cli
           # Configure that a scope must always be provided.
           requireScope: true
           # Configure which scopes are disallowed in PR titles (newline-delimited).

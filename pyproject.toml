@@ -52,9 +52,11 @@ dependencies = [
     "nox>=2026.2.9",
     "pytest-cov>=7.0.0",
     "websockets>=15.0.1",
+    "typer>=0.24.1",
 ]
 
-mujoco-typegen = "scripts.mujoco_typegen:main"
+[project.scripts]
+tt = "tt.cli:main"
 
 [project.urls]
 Homepage = "https://tektonian.com"
@@ -93,9 +95,13 @@ stubPath = ".typings"
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
 
+[tool.hatch.envs.static]
 
-[tool.setuptools]
-py-modules = []
+[tool.hatch.build.targets.sdist]
+include = [
+    "tt/*.py",
+]
 
-[tool.setuptools.packages.find]
-include = ["tt*", "scripts"]
+[tool.hatch.envs.test.scripts]
+run-coverage = "pytest --cov-config=pyproject.toml --cov=pkg --cov=tests"
+run = "run-coverage --no-cov"
