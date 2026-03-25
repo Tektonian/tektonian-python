@@ -1,5 +1,7 @@
 from typing import Any
 
+from tt.base.envvar.envvar import IEnvvarService
+from tt.base.envvar.envvar_service import EnvvarService
 from tt.base.instantiate.extensions import (
     register_singleton,
     get_singleton_service_descriptors,
@@ -36,6 +38,7 @@ from tt.sdk.world_service.common.world_service import (
 )
 
 register_singleton(ILogService, LogService)
+register_singleton(IEnvvarService, EnvvarService)
 register_singleton(ISimulationManagementService, SimulationManagementService)
 register_singleton(IRunnerManagementService, RunnerManagementService)
 register_singleton(IWorldManagementService, WorldManagementService)

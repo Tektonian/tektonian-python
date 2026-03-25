@@ -15,7 +15,7 @@ class IEnvvarService(ServiceIdentifier["IEnvvarService"]):
     # telemetry
     @property
     @abstractmethod
-    def disable_telemetry(self) -> bool: ...
+    def telemetry_disabled(self) -> bool: ...
 
     # file path
     @property

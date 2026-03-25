@@ -40,7 +40,7 @@ class EnvvarService(IEnvvarService):
             return self._log_level
 
     @property
-    def disable_telemetry(self) -> bool:
+    def telemetry_disabled(self) -> bool:
         tele_env = os.environ.get(self.KEY_VALUE.TT_TELEMETRY, None)
         if tele_env is None:
             return False
