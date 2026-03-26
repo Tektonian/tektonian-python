@@ -1,6 +1,6 @@
 from __future__ import annotations
 from inspect import signature
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Any, Type, Iterable, MutableMapping, Generic
@@ -37,14 +37,14 @@ class _Util:
 
 def service_identifier(identifier: str):
 
-    def wrapper[T](cls: Type[ServiceIdentifier[T]]) -> Type[ServiceIdentifier[T]]:
+    def wrapper[T](cls: Type[ServiceIdentifier[T]]) -> Type[T]:
         # sign = signature(cls)
 
         key = cls.__name__
         if identifier != key:
             raise BaseException("No maching key")
         _Util.service_ids[key] = cls
-        return cls
+        return cast(Type[T], cls)
 
     return wrapper
 
