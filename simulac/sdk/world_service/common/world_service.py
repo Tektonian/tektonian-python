@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Mapping, Optional
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from simulac.base.result.result import ResultType
 
@@ -50,7 +50,7 @@ class WorldManagementService(IWorldManagementService):
         for world in self.worlds:
             if world.id == world_id:
                 return (world, None)
-        return (None, TektonianBaseError("no world found"))
+        return (None, SimulacBaseError("no world found"))
 
     def create_world(self, environments: Optional[List[IEnvironment]]):
         world_id = f"{self._ID_PREFIX}{len(self._worlds)}"

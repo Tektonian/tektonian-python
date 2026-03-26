@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import SplitResult, urlsplit
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk.environment_service.common.model.entity import (
     EnvironmentCameraEntity,
     EnvironmentLightEntity,
@@ -62,4 +62,4 @@ class IEnvironment(ABC):
         )
 
         if url.scheme not in ["http", "https", "file", "memory"]:
-            raise TektonianBaseError("not valid schema")
+            raise SimulacBaseError("not valid schema")

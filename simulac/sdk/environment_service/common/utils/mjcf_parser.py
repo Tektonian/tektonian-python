@@ -6,7 +6,7 @@ from typing import List, MutableMapping, Tuple
 
 import mujoco
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 
 
 @dataclass
@@ -103,7 +103,7 @@ def parse_mjcf_path(uri: str):
     root = tree.getroot()
 
     if root.tag != "mujoco":
-        raise TektonianBaseError(f"File seems like non mjcf: {uri}")
+        raise SimulacBaseError(f"File seems like non mjcf: {uri}")
 
     asset_root_path: str | None = None
 

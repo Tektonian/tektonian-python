@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, MutableMapping
 
 from websockets import connect
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
     IPhysicsEngineAdapterState,
@@ -88,14 +88,14 @@ class RemoteAdapter(IPhysicsEngineAdapter):
         env_ret = self.EnvironmentManagementService.get_environment(env_id)
 
         if env_ret[0] is None:
-            raise TektonianBaseError(f"No environment {env_id}")
+            raise SimulacBaseError(f"No environment {env_id}")
 
         env = env_ret[0]
         self.env = env
 
     def create_runner(self) -> IRunner:
         if self._step_count != 0:
-            raise TektonianBaseError(
+            raise SimulacBaseError(
                 "Cannot create new runner after calling step() function"
             )
 

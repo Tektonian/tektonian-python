@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable, MutableMapping
 import mujoco
 import mujoco.viewer
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
     IPhysicsEngineAdapterState,
@@ -81,7 +81,7 @@ class MujocoRunner(IRunner):
 
     def step(self, action: list[float]) -> None:
         if self._data is None:
-            raise TektonianBaseError("Runner must be initialized before step()")
+            raise SimulacBaseError("Runner must be initialized before step()")
 
         self._data.ctrl = action
 
@@ -169,12 +169,12 @@ class MujocoAdapter(IPhysicsEngineAdapter):
 
     def create_runner(self) -> IRunner:
         if self._step_count != 0:
-            raise TektonianBaseError(
+            raise SimulacBaseError(
                 "Cannot create new runner after calling step() function"
             )
 
         if self.model is None:
-            raise TektonianBaseError("Adapter not initialized")
+            raise SimulacBaseError("Adapter not initialized")
 
         def on_after_runner_step(runner_id: str):
             self._step_count_map[runner_id] += 1

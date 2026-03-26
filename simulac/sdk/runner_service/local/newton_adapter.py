@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, MutableMapping
 # Will be solved? https://peps.python.org/pep-0810/
 # import warp as wp
 # import newton
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
     IPhysicsEngineAdapterState,
@@ -124,7 +124,7 @@ class NewtonAdapter(IPhysicsEngineAdapter):
 
     def create_runner(self) -> IRunner:
         if self._step_count != 0:
-            raise TektonianBaseError(
+            raise SimulacBaseError(
                 "Cannot create new runner after calling step() function"
             )
 

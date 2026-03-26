@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, List, Mapping, MutableMapping, Tuple, Type
 from urllib.parse import urlsplit
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from simulac.base.result.result import ResultType
 from simulac.sdk.environment_service.common.environment_service import (
@@ -94,7 +94,7 @@ class RunnerManagementService(IRunnerManagementService):
         for run in self.runners:
             if run.id == runner_id:
                 return (run, None)
-        return (None, TektonianBaseError("no runner found"))
+        return (None, SimulacBaseError("no runner found"))
 
     def remove_runner(self, runner_id: str) -> None:
         for run in self.runners:
@@ -129,7 +129,7 @@ class RunnerManagementService(IRunnerManagementService):
         if env.physics_engine == "mujoco" or env.physics_engine == "newton":
             factory = self.physics_adapter_factory.get(env.physics_engine)
             if factory is None:
-                return (None, TektonianBaseError(f"No proper adaptor for mujoco"))
+                return (None, SimulacBaseError(f"No proper adaptor for mujoco"))
 
             adapter = factory.create_physics_engine_adapter(env.id)
             self.physics_adapter[env.id] = adapter
@@ -138,7 +138,7 @@ class RunnerManagementService(IRunnerManagementService):
             return (runner, None)
 
         else:
-            return (None, TektonianBaseError(f"No proper adaptor for {env}"))
+            return (None, SimulacBaseError(f"No proper adaptor for {env}"))
         # end-region
 
         if env_json_uri.scheme in ["http", "https"]:
@@ -161,5 +161,5 @@ class RunnerManagementService(IRunnerManagementService):
         else:
             return (
                 None,
-                TektonianBaseError("Local runner class is not implemented yet"),
+                SimulacBaseError("Local runner class is not implemented yet"),
             )

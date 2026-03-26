@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Literal, Tuple, overload
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
 
 from .entity import Camera, Light, Robot, Stuff
@@ -115,7 +115,7 @@ class StuffObject:
         self, entity_id: str, /, *, _prevent_user_direct_call: bool = True
     ) -> None:
         if _prevent_user_direct_call == True:
-            raise TektonianBaseError("Please do not create stuff object directly")
+            raise SimulacBaseError("Please do not create stuff object directly")
 
         self.entity_id = entity_id
 
@@ -131,7 +131,7 @@ class RobotObject:
         self, entity_id: str, /, *, _prevent_user_direct_call: bool = True
     ) -> None:
         if _prevent_user_direct_call == True:
-            raise TektonianBaseError("Please do not create stuff object directly")
+            raise SimulacBaseError("Please do not create stuff object directly")
 
         self.entity_id = entity_id
 

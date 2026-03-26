@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, List, MutableMapping, Tuple, TypeVar, Union
 from urllib.parse import SplitResult
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from simulac.sdk.environment_service.common.environment_service import (
     IEnvironmentManagementService,
@@ -161,7 +161,7 @@ class EnvironmentBuildService(IEnvironmentBuildService):
         entity = self.entities_map.get(entity_id, None)
 
         if entity is None:
-            raise TektonianBaseError(f"No entity id {entity_id}")
+            raise SimulacBaseError(f"No entity id {entity_id}")
 
         entity.pos = pos
 
@@ -169,7 +169,7 @@ class EnvironmentBuildService(IEnvironmentBuildService):
         entity = self.entities_map.get(entity_id, None)
 
         if entity is None:
-            raise TektonianBaseError(f"No entity id {entity_id}")
+            raise SimulacBaseError(f"No entity id {entity_id}")
 
         entity.quat = quat
 

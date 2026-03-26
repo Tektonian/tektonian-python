@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal, Mapping, Union, overload
 from urllib.parse import SplitResult, urlsplit
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from simulac.base.result.result import ResultType
 from simulac.sdk.environment_service.common.model.component import (
@@ -64,7 +64,7 @@ class EnvironmentManagementService(IEnvironmentManagementService):
     def get_environment(self, environment_id: str):
         env = self.environments.get(environment_id)
         if env is None:
-            return (None, TektonianBaseError("no environment found"))
+            return (None, SimulacBaseError("no environment found"))
         return (env, None)
 
     def create_environment(
@@ -95,7 +95,7 @@ class EnvironmentManagementService(IEnvironmentManagementService):
     ):
         env_ret = self.get_environment(env_id)
         if env_ret[0] is None:
-            raise TektonianBaseError("No environment found")
+            raise SimulacBaseError("No environment found")
 
         env = env_ret[0]
 

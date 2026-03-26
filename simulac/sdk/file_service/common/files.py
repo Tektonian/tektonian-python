@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from simulac.base.error.error import TektonianBaseError
+from simulac.base.error.error import SimulacBaseError
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 from simulac.base.result.result import ResultType
 
@@ -189,7 +189,7 @@ class FileSystemProviderErrorCode(Enum):
     UNKONWN = "Unknown"
 
 
-class FileSystemProviderError(TektonianBaseError):
+class FileSystemProviderError(SimulacBaseError):
     def __init__(self, message: str, code: FileSystemProviderErrorCode) -> None:
         super().__init__(message, dict())
         self.code = code
@@ -270,7 +270,7 @@ class FileOperationResult(Enum):
     FILE_OTHER_ERROR = "FILE_OTHER_ERROR"
 
 
-class FileOperationError(TektonianBaseError):
+class FileOperationError(SimulacBaseError):
     def __init__(
         self, message: str, file_operation_result: FileOperationResult
     ) -> None:
