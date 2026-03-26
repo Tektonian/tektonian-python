@@ -28,6 +28,10 @@ from tt.sdk.runner_service.common.runner_service import (
 from tt.sdk.runner_service.local.mujoco_adapter import MujocoAdapter
 from tt.sdk.runner_service.local.newton_adapter import NewtonAdapter
 from tt.sdk.runner_service.remote.remote_adapter import RemoteAdapter
+from tt.sdk.telemetry_service.common.telemetry_service import (
+    ITelemetryService,
+    TelemetryService,
+)
 from tt.sdk.world_service.common.world_service import (
     IWorldManagementService,
     WorldManagementService,
@@ -41,6 +45,7 @@ from tt.sdk.world_service.common.world_service import (
 
 register_singleton(ILogService, LogService)
 register_singleton(IEnvvarService, EnvvarService)
+register_singleton(ITelemetryService, TelemetryService)
 register_singleton(IRunnerManagementService, RunnerManagementService)
 register_singleton(IWorldManagementService, WorldManagementService)
 register_singleton(IEnvironmentManagementService, EnvironmentManagementService)
