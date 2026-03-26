@@ -45,9 +45,11 @@ def _capture_requests(monkeypatch: MonkeyPatch):
 
 
 def _build_service(monkeypatch: MonkeyPatch) -> TelemetryService:
-    monkeypatch.setenv(EnvvarKeyValue.TT_BASE_URL.value, "https://example.test/api")
-    monkeypatch.setenv(EnvvarKeyValue.TT_API_KEY.value, "tt_" + ("a" * 41))
-    monkeypatch.delenv(EnvvarKeyValue.TT_TELEMETRY.value, raising=False)
+    monkeypatch.setenv(
+        EnvvarKeyValue.SIMULAC_BASE_URL.value, "https://example.test/api"
+    )
+    monkeypatch.setenv(EnvvarKeyValue.SIMULAC_API_KEY.value, "simulac_" + ("a" * 41))
+    monkeypatch.delenv(EnvvarKeyValue.SIMULAC_TELEMETRY.value, raising=False)
 
     return TelemetryService(EnvvarService())
 

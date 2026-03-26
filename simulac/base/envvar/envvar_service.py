@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 
 class EnvvarKeyValue(StrEnum):
-    TT_LOG_LEVEL = "TT_LOG_LEVEL"
-    TT_BASE_URL = "TT_BASE_URL"
-    TT_TELEMETRY = "TT_TELEMETRY"
-    TT_API_KEY = "TT_API_KEY"
+    SIMULAC_LOG_LEVEL = "SIMULAC_LOG_LEVEL"
+    SIMULAC_BASE_URL = "SIMULAC_BASE_URL"
+    SIMULAC_TELEMETRY = "SIMULAC_TELEMETRY"
+    SIMULAC_API_KEY = "SIMULAC_API_KEY"
 
 
 class EnvvarService(IEnvvarService):
@@ -32,7 +32,7 @@ class EnvvarService(IEnvvarService):
 
     @property
     def log_level(self) -> str:
-        level = os.environ.get(self.KEY_VALUE.TT_LOG_LEVEL, None)
+        level = os.environ.get(self.KEY_VALUE.SIMULAC_LOG_LEVEL.value, None)
         if level in ["off", "trace", "debug", "info", "warning", "error"]:
             return level
         else:
@@ -40,7 +40,7 @@ class EnvvarService(IEnvvarService):
 
     @property
     def telemetry_disabled(self) -> bool:
-        tele_env = os.environ.get(self.KEY_VALUE.TT_TELEMETRY, None)
+        tele_env = os.environ.get(self.KEY_VALUE.SIMULAC_TELEMETRY.value, None)
         if tele_env is None:
             return False
         elif tele_env == "off":
@@ -50,8 +50,8 @@ class EnvvarService(IEnvvarService):
 
     @property
     def log_file(self) -> Path:
-        tt_dir = os.path.join(self.app_root, ".tt", "log.json")
-        return Path(tt_dir)
+        simulac_log_path = os.path.join(self.app_root, ".simulac", "log.json")
+        return Path(simulac_log_path)
 
     @property
     def app_root(self) -> Path:
@@ -79,25 +79,25 @@ class EnvvarService(IEnvvarService):
 
     @property
     def token(self) -> str | None:
-        token_env = os.environ.get(self.KEY_VALUE.TT_API_KEY.value, None)
+        token_env = os.environ.get(self.KEY_VALUE.SIMULAC_API_KEY.value, None)
         if token_env is not None:
             return token_env
 
         token_ret = ""
         if self.token_path.exists() and self.token_path.is_file():
             with open(self.token_path, "r") as file:
-                token_ret = file.readline(1)
+                token_ret = file.readline()
 
         token_ret = token_ret.replace("\n", "").replace("\r", "").strip()
 
-        if token_ret.startswith("tt_") and len(token_ret) > 40:
+        if len(token_ret) > 40:
             return token_ret
 
         return None
 
     @property
     def base_url(self) -> str:
-        env_path = os.environ.get(self.KEY_VALUE.TT_BASE_URL.value, None)
+        env_path = os.environ.get(self.KEY_VALUE.SIMULAC_BASE_URL.value, None)
         if env_path is not None:
             return env_path
         else:

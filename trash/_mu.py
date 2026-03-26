@@ -132,7 +132,7 @@ scene_xml = """
 
 
 # # Create the child spec.
-# child = mujoco.MjSpec.from_file("tt/asset/roboverse/franka/mjcf/panda.xml")
+# child = mujoco.MjSpec.from_file("trash/assets/asset/roboverse/franka/mjcf/panda.xml")
 
 # Create the parent spec.
 parent = mujoco.MjSpec.from_string(scene_xml)
@@ -141,12 +141,12 @@ frame = parent.worldbody.add_frame()
 # site = parent.worldbody.add_site()
 
 # Create the child spec.
-child = mujoco.MjSpec.from_file("tt/asset/roboverse/franka/mjcf/panda.xml")
-child2 = mujoco.MjSpec.from_file("tt/asset/roboverse/franka/mjcf/panda.xml")
+child = mujoco.MjSpec.from_file("trash/assets/asset/roboverse/franka/mjcf/panda.xml")
+child2 = mujoco.MjSpec.from_file("trash/assets/asset/roboverse/franka/mjcf/panda.xml")
 child_body = child.worldbody.add_body()
 child_frame = child.worldbody.add_frame()
 
-basket = mujoco.MjSpec.from_file("tt/asset/test/Basket/Basket026/model.xml")
+basket = mujoco.MjSpec.from_file("trash/assets/asset/test/Basket/Basket026/model.xml")
 print(basket.pair)
 
 
