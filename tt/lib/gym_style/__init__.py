@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Any, Optional, overload
 
-from tt.sdk import instantiate_service
 from .gym_style_environment import BenchmarkEnvironment, BenchmarkVecEnvironment
 
 
