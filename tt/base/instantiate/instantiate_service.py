@@ -1,17 +1,27 @@
 from __future__ import annotations
 
-from enum import IntEnum
-from inspect import signature
+import inspect
 import time
 import traceback
-from typing import Generic, Iterable, Optional, Tuple, List, Type, Any, TypeVar, Type
+from enum import IntEnum
+from typing import (
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    cast,
+)
 
 from .descriptor import SyncDescriptor
-from .instantiate import IInstantiateService, ServiceIdentifier, IServiceAccessor
-from .service_collection import ServiceCollection
 from .graph import Graph
+from .instantiate import IInstantiateService, IServiceAccessor, ServiceIdentifier, _Util
+from .service_collection import ServiceCollection
 
-_ENABLE_TRACING = True
+_ENABLE_TRACING = False
 
 T = TypeVar("T")
 G = Generic[T]
@@ -57,29 +67,28 @@ class InstantiateService(IInstantiateService):
 
     def _get_service_dependencies[I: object](self, ctor: Type[I]):
 
-        sign = signature(ctor)
-
+        sign = inspect.signature(ctor)
         ret: List[Tuple[Type[ServiceIdentifier[object]], int]] = []
-
         idx = 0
+
         for name, param in sign.parameters.items():
             if name == "self":
                 continue
-            annotation = param.annotation
-            identifier: Type[ServiceIdentifier[object]] | None = next(
-                (
-                    entry
-                    for entry in self._services._entries
-                    if entry.__name__ == annotation
-                ),
-                None,
-            )
+            annotation: str | inspect.Parameter.empty = param.annotation
+            identifier: Type[ServiceIdentifier[Any]] | None = None
+
+            if isinstance(annotation, str):
+                identifier = _Util.service_ids.get(annotation)
+            elif inspect.isclass(annotation) and issubclass(
+                annotation, ServiceIdentifier
+            ):
+                # Won't be reached maybe?
+                identifier = annotation
+
             if identifier is None:
                 raise Exception(f"Unresolved service dependency: {annotation}")
-            # for entry in self._services._entries:
-            #     if entry.__name__ == annotation:
-            #         identifier = entry
-            ret.append((identifier, idx))
+            else:
+                ret.append((identifier, idx))
             idx += 1
 
         return ret
@@ -309,7 +318,7 @@ class InstantiateService(IInstantiateService):
         _done = False
 
         class ServiceAccessor(IServiceAccessor):
-            def get(self, identifier: Type[T]) -> T:
+            def get[O: object](self, identifier: type[ServiceIdentifier[O]]) -> O:
                 nonlocal _done
 
                 __obj = {"name": "service_accessor"}
@@ -328,7 +337,7 @@ class InstantiateService(IInstantiateService):
                     )
 
                 _trace.stop()
-                return ret
+                return cast(T, ret)
 
         accessor = ServiceAccessor()
 
@@ -356,7 +365,7 @@ class Trace:
         if _enable_tracing is True:
             return Trace(TraceTypeEnum.INVORATION, ctor)
         else:
-            return __NoneTrace()
+            return _NoneTrace()
 
     @staticmethod
     def trace_creation(_enable_tracing: bool, ctor: object) -> Trace:
@@ -368,7 +377,7 @@ class Trace:
         if _enable_tracing is True:
             return Trace(TraceTypeEnum.CREATION, ctor)
         else:
-            return __NoneTrace()
+            return _NoneTrace()
 
     _totals = 0
 
@@ -415,7 +424,7 @@ class Trace:
             print("\n".join(lines))
 
 
-class __NoneTrace(Trace):
+class _NoneTrace(Trace):
     def __init__(self) -> None:
         pass
 

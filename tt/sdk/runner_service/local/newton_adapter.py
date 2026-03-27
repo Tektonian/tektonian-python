@@ -1,22 +1,27 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Callable, MutableMapping
 
-import warp as wp
-import newton
-
+# Lazy imports for solve dependency issue and heavy package import issue
+# Will be solved? https://peps.python.org/pep-0810/
+# import warp as wp
+# import newton
 from tt.base.error.error import TektonianBaseError
-from tt.sdk.runner_service.common.runner import IRunner
 from tt.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
     IPhysicsEngineAdapterState,
 )
+from tt.sdk.runner_service.common.runner import IRunner
 
 if TYPE_CHECKING:
-    from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
+    import newton
+    import warp as wp
+
     from tt.sdk.environment_service.common.environment_service import (
         IEnvironmentManagementService,
     )
     from tt.sdk.log_service.common.log_service import ILogService
+    from tt.sdk.runner_service.common.runner_service import IRunnerManagementService
 
 
 class NewtonRunner(IRunner):
@@ -43,6 +48,7 @@ class NewtonRunner(IRunner):
     def render(self) -> None: ...
     def reset(self) -> None: ...
     def set_state(self) -> None: ...
+    def __debug_render(self) -> Any: ...
 
 
 class NewtonAdapter(IPhysicsEngineAdapter):
@@ -53,6 +59,22 @@ class NewtonAdapter(IPhysicsEngineAdapter):
         RunnerManagementService: IRunnerManagementService,
         EnvironmentManagementService: IEnvironmentManagementService,
     ) -> None:
+        try:
+            # lazy import
+            import newton
+            import warp as wp
+        except ImportError as e:
+            raise ImportError(
+                "".join(
+                    [
+                        "To run newton simulation. Please install 'newton' and 'warp' packages.",
+                        "Use 'uv add newton' or 'pip install newton'",
+                    ]
+                )
+            ) from e
+
+        self.newton = newton
+        self.wp = wp
 
         self.env_id = env_id
         self.LogService = LogService
@@ -112,7 +134,7 @@ class NewtonAdapter(IPhysicsEngineAdapter):
                 self.__set_debug_env(self._runner_count)
 
                 self.model = self.builder.finalize()
-                self._solver = newton.solvers.SolverMuJoCo(self.model)
+                self._solver = self.newton.solvers.SolverMuJoCo(self.model)
                 self._state_0 = self.model.state()
                 self._state_1 = self.model.state()
                 self._control = self.model.control()
@@ -141,9 +163,9 @@ class NewtonAdapter(IPhysicsEngineAdapter):
             s2 = s1 + self.model.max_dofs_per_articulation
 
             # Copy action into the segment using wp.copy to avoid slice assignment
-            src: wp.array[wp.float32] = wp.array(action, dtype=wp.float32)
+            src: wp.array[wp.float32] = self.wp.array(action, dtype=wp.float32)
             count = s2 - s1  # == self.model.max_dofs_per_articulation
-            wp.copy(
+            self.wp.copy(
                 self._control.joint_target_pos,
                 src,
                 dest_offset=s1,

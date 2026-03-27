@@ -18,3 +18,7 @@ venv
 .tmp/**
 
 .DS_Store
+
+# typing
+/.typing
+

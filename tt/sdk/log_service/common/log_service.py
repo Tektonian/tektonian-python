@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
 from enum import Enum
+from typing import Any, Tuple
 
 import structlog
 
@@ -20,7 +20,7 @@ DEFAULT_LOG_LEVEL: LogLevel = LogLevel.INFO
 
 
 @service_identifier("ILogService")
-class ILogService(ServiceIdentifier):
+class ILogService(ServiceIdentifier["ILogService"]):
     @abstractmethod
     def set_level(self, level: LogLevel) -> None:
         pass

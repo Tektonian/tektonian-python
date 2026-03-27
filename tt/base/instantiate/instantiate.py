@@ -1,9 +1,17 @@
 from __future__ import annotations
-from inspect import signature
-from typing import TYPE_CHECKING
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Any, Type, Iterable, MutableMapping, Generic
+from inspect import signature
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    MutableMapping,
+    Type,
+    TypeVar,
+    cast,
+)
 
 if TYPE_CHECKING:
     from tt.base.instantiate.descriptor import SyncDescriptor
@@ -14,7 +22,7 @@ I = TypeVar("I")
 
 class IServiceAccessor(ABC):
     @abstractmethod
-    def get(self, identifier: Type[I]) -> I:
+    def get[O: object](self, identifier: type[ServiceIdentifier[O]]) -> O:
         pass
 
 
@@ -32,19 +40,19 @@ class ServiceIdentifier(Generic[T]):
 
 
 class _Util:
-    service_ids: MutableMapping[str, str] = {}
+    service_ids: dict[str, Type[ServiceIdentifier[Any]]] = {}
 
 
 def service_identifier(identifier: str):
 
-    def wrapper[T](cls: Type[T]) -> Type[T]:
+    def wrapper[T](cls: Type[ServiceIdentifier[T]]) -> Type[T]:
         # sign = signature(cls)
 
         key = cls.__name__
         if identifier != key:
             raise BaseException("No maching key")
-        _Util.service_ids[key] = identifier
-        return cls
+        _Util.service_ids[key] = cls
+        return cast(Type[T], cls)
 
     return wrapper
 
@@ -53,7 +61,7 @@ def service_identifier(identifier: str):
 
 
 @service_identifier("IInstantiateService")
-class IInstantiateService(ServiceIdentifier[Any]):
+class IInstantiateService(ServiceIdentifier["IInstantiateService"]):
     @abstractmethod
     def create_instance[I: ServiceIdentifier[Any]](
         self,

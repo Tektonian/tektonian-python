@@ -1,14 +1,13 @@
 {
-    "python.linting.pylintArgs": [
-        "--init-hook",
-        "import sys; sys.path.append(\"YOUR_PATH\");",
-        "--disable",
-        "C0301" 
-    ],
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "editor.formatOnSave": true,
-    "python.formatting.provider": "black",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+    },
+    "ruff.nativeServer": "on",
+    "python.languageServer": "Pylance",
     "python.linting.mypyEnabled": true,
     "python.linting.mypyArgs": [
         "--follow-imports=silent",
@@ -16,4 +15,11 @@
         "--show-column-numbers",
         "--no-pretty"
     ],
+    "terminal.integrated.shellIntegration.enabled": false,
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.inlayHints.callArgumentNames": "all",
+    "python.analysis.autoImportCompletions": true,
+    "git.decorations.enabled": false
+
 }

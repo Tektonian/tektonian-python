@@ -1,7 +1,7 @@
-from enum import Enum
-from typing import List, Tuple, TypeVar, Type, Generic, MutableMapping, Any
 from abc import ABC, abstractmethod
+from enum import Enum
 from inspect import isclass, signature
+from typing import Any, Generic, List, MutableMapping, Tuple, Type, TypeVar
 
 from .descriptor import SyncDescriptor
 from .instantiate import ServiceIdentifier
@@ -15,8 +15,11 @@ class InstantiateType(Enum):
 _registry: List[Tuple[Type[ServiceIdentifier[object]], SyncDescriptor[Any]]] = []
 
 
-def register_singleton(
-    interface: Type[ServiceIdentifier[object]],
+O = TypeVar("O", bound=object)
+
+
+def register_singleton[O](
+    interface: Type[ServiceIdentifier[O]],
     descriptor: Type[object],
     support_delayed_instantiation: InstantiateType = InstantiateType.DELAYED,
 ):

@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 from typing import Any, Optional, overload
 
-from tt.sdk import instantiate_service
 from .gym_style_environment import BenchmarkEnvironment, BenchmarkVecEnvironment
 
 
@@ -53,3 +53,6 @@ def init_bench(
 def make_vec(envs: list[BenchmarkEnvironment]):
     vec_env = BenchmarkVecEnvironment(envs)
     return vec_env
+
+
+__all__ = ["init_bench", "make_vec"]

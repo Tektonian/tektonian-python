@@ -1,0 +1,142 @@
+{
+  "seed": 0,
+  "objects": [
+    {
+      "id": "bar.0",
+      "name": "Choco bar",
+      "description": "",
+      "uri": "",
+      "fixed": true,
+      "pos": { "default": [0, 0, 0], "dist": "uniform", "min": [-1, 0, 0], "max": [1, 0, 0] },
+      "quat": { "default": [0, 0, 0, 1], "entry": "~/run.py#bar_random_quat" },
+      "size": [1, 1, 1],
+      "phsyic": {
+        "default_engine": "mujoco",
+        "bodies": [{
+
+        }]
+      },
+      "render": {
+        
+      }
+      // "solref": [0.02, 1],
+      // "solimp": [0.9, 0.95, 0.001, 0.5, 2],
+      // "friction": [1, 0.005, 0.0001],
+      // "density": 100,
+      // Newton
+      // "mu": 1.0,
+      // "ke": 2500,
+      // "kd": 100.0,
+      // "kf": 1000.0,
+      // "ka": 0.0,
+      // "restitution": 0.0,
+      // "mu_torsional": 0.005,
+      // "mu_rolling": 0.0001,
+      // "kh": 10000000000.0,
+
+      // Articulated
+      "init_position": [0.5, 0.5]
+
+      // TODO:Softbody
+    }
+  ],
+  // TODO: Particles
+  "particles": [],
+  "softbodies": [],
+  "cameras": [
+    {
+      "id": "",
+      "name": "",
+      "description": "",
+      "type": "rgb", // tactile, depth, pointcloud", // normal, segmentation ->
+      "mode": "fixed", //  track, trackcom, targetbody, targetbodycom ? Needed?
+      // -> 환경을 위한 camera, body에 부착된 camera 분리 / body에 부착된 camera는 obs.json으로
+      // 또는 camera 필요 없을지도
+      "pos": [0, 0, 0],
+      "lookat": [0, 0, 0],
+      "fov": 50,
+      "aspect": 1.23,
+      "near": 123,
+      "far": 1234
+    }
+  ],
+  "machines": [
+    {
+      "id": "franka.0",
+      "name": "franka0",
+      "description": "Franka on the left side",
+      "uri": "franka.xml",
+      "pos": [0, 0, 0],
+      "quat": [0, 0, 0, 1],
+      "init_position": [
+        -0.0036802115, 0.023901723, 0.003680411, -2.3683236, -0.00012918962,
+        2.3922248, 0.785492, 0.05, 0.05
+      ]
+      // "action_min": [-1, -1, ...], Needed?
+      // "action_max": [1, 1, ...]
+    }
+  ],
+  "lights": [
+    {
+      "type": "ambient", // pointlight, rectarea, spot
+      "color": "#abcdef",
+      "intensity": 0.7 // distance, angle, decay, etc...
+    }
+  ],
+  "randoms": [
+    {
+      "vars": {
+        "global_scale": { "dist": "loguniform", "low": 0.9, "high": 1.1 }
+      }
+    }
+  ],
+  "constraints": [
+    {
+      "type": "nonpenetration",
+      "between": [["bar.0"], ["franka.0"]]
+      // or regex (should start with '/' and finish with '/')
+      // [["/bar.*/"], ["/franka.*/"]]
+    },
+    {
+      "type": "bbox",
+      "min": [-0.3, -0.3, 0.75],
+      "max": [0.3, 0.3, 0.8],
+      "mode": "inside", // "outside"
+      "targets": [["franka.0", "/bar.*/"]]
+    },
+    {
+      "type": "cylinder",
+      "center": [0, 0, 0],
+      "radius": 0.5,
+      "height": [0.0, 1.0],
+      "mode": "inside", // "outside"
+      "targets": [["franka.0", "/bar.*/"]]
+    },
+    {
+      "type": "sphere",
+      "center": [0, 0, 0],
+      "radius": 0.5,
+      "mode": "inside", // "outside"
+      "targets": [["franka.0", "/bar.*/"]]
+    },
+    {
+      "type": "distance",
+      "between": [[["franka.0"]], ["/bar.*/"]], // [[regex or list], [regex or list]]
+      "min": 0.05,
+      "max": 0.5
+    },
+    {
+      // plane should be handled with GUI, because it's not intuitive
+      "type": "plane",
+      "side": "above", // "on", "below", "under", etc...
+      "of": "table.0.[body_id]",
+      "point": [0, 0, 1], // 기준점
+      "normal": [0, 0, 0.5], // 법선 벡터
+      "targets": ["bar.0"],
+      "align_up_min_dot": 0.2 // 법선 정렬 임계
+    },
+    {
+      "entry:": "~/ran.py#choco_bar_constraint"
+    }
+  ]
+}

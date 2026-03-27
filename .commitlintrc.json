@@ -12,7 +12,7 @@
       2,
       "always",
       {
-        "scopes": ["project", "sdk", "lib", "test", "base", "server"],
+        "scopes": ["project", "sdk", "lib", "test", "base", "server", "cli"],
         "delimiters": [","]
       }
     ],
