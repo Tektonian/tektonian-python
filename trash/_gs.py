@@ -29,18 +29,20 @@ cam = scene.add_camera(
 plane = scene.add_entity(gs.morphs.Plane())
 franka = scene.add_entity(
     gs.morphs.MJCF(
-        file="tt/asset/robosuite/assets/robots/panda/robot.xml", pos=(1, 0, 0)
+        file="trash/assets/asset/robosuite/robots/panda/robot.xml", pos=(1, 0, 0)
     ),
 )
 
 franka2 = scene.add_entity(
     gs.morphs.MJCF(
-        file="tt/asset/robosuite/assets/robots/panda/robot.xml", pos=(-1, 0, 0)
+        file="trash/assets/asset/robosuite/robots/panda/robot.xml", pos=(-1, 0, 0)
     ),
 )
 
 basket = scene.add_entity(
-    gs.morphs.MJCF(file="tt/asset/test/Basket/Basket026/model.xml", pos=(-0.5, 0, 0)),
+    gs.morphs.MJCF(
+        file="trash/assets/asset/test/Basket/Basket026/model.xml", pos=(-0.5, 0, 0)
+    ),
 )
 
 scene.build()

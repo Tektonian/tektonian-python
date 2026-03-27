@@ -7,26 +7,27 @@ builder.add_ground_plane()
 
 builder.begin_world()
 builder.add_urdf(
-    "/Users/kangjeuk/Desktop/wiip/tektonian-python/tt/asset/newton-assets-main/franka_emika_panda/urdf/fr3_franka_hand.urdf"
+    "trash/assets/asset/newton-assets-main/franka_emika_panda/urdf/fr3_franka_hand.urdf"
 )  # or add_urdf() / add_usd()
 # builder.add_mjcf(
-#     "tt/asset/robosuite/assets/robots/panda/robot.xml", xform=(-1.0, 0, 0, 0, 0, 0, 1)
+#     "trash/assets/asset/robosuite/robots/panda/robot.xml", xform=(-1.0, 0, 0, 0, 0, 0, 1)
 # )  # or add_urdf() / add_usd()
 builder.add_mjcf(
-    "tt/asset/test/Basket/Basket026/model.xml",
+    "trash/assets/asset/test/Basket/Basket026/model.xml",
     xform=(0.7, 0, 0, 0, 0, 0, 1),
 )
 builder.end_world()
 
 builder.begin_world()
 builder.add_urdf(
-    "/Users/kangjeuk/Desktop/wiip/tektonian-python/tt/asset/newton-assets-main/franka_emika_panda/urdf/fr3_franka_hand.urdf"
+    "trash/assets/asset/newton-assets-main/franka_emika_panda/urdf/fr3_franka_hand.urdf"
 )  # or add_urdf() / add_usd()
 # builder.add_mjcf(
-#     "tt/asset/robosuite/assets/robots/panda/robot.xml", xform=(-1.0, 0, 0, 0, 0, 0, 1)
+#     "trash/assets/asset/robosuite/robots/panda/robot.xml", xform=(-1.0, 0, 0, 0, 0, 0, 1)
 # )  # or add_urdf() / add_usd()
 builder.add_mjcf(
-    "tt/asset/test/Basket/Basket026/model.xml", xform=(0.7, 0, 0, 0, 0, 0, 1)
+    "trash/assets/asset/test/Basket/Basket026/model.xml",
+    xform=(0.7, 0, 0, 0, 0, 0, 1),
 )
 builder.end_world()
 

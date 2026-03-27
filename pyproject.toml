@@ -4,7 +4,7 @@ requires = ["uv_build>=0.11.1,<0.12"]
 build-backend = "uv_build"
 
 [project]
-name = "tt"
+name = "simulac"
 version = "0.0.1"
 description = "A CLI, library, and local server for interacting with the Tektonian backend."
 authors = [{ name = "Jeuk Kang", email = "gangjeuk@tektonian.com" }]
@@ -48,7 +48,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tt = "tt.cli:main"
+simulac = "simulac.cli:main"
 
 [project.urls]
 Homepage = "https://tektonian.com"
@@ -97,12 +97,15 @@ exclude = ["trash"]
 [tool.pyright]
 stubPath = ".typings"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
 
 [tool.uv.build-backend]
-module-name = "tt"
+module-name = "simulac"
 module-root = ""
-source-include = ["tt/**"]
+source-include = ["simulac/**"]
 
 # END - tool setting
