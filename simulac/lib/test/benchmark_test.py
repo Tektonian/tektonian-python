@@ -1,3 +1,4 @@
+import pytest
 from simulac.lib.gym_style import init_bench, make_vec
 
 
@@ -5,14 +6,10 @@ from simulac.lib.gym_style import init_bench, make_vec
 def test_libero_benchmark():
     env = init_bench(
         "Tektonian/Libero",
-        "env",
+        "libero_90/KITCHEN_SCENE2_put_the_black_bowl_at_the_back_on_the_plate",
         0,
         {
-            "task_name": "",
-            "task_id": 0,
-            "seed": 0,
             "control_mode": "ee_pose",
-            "env_id": "libero_10",
         },
     )
     EMPTY_ACTION = [0] * 7
@@ -25,6 +22,17 @@ def test_libero_benchmark():
     for i in range(len(obs_history)):
         ret = env.step(EMPTY_ACTION)
         assert ret == obs_history[i]
+
+    new_env = init_bench(
+        "Tektonian/Libero",
+        "libero_10/LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket",
+        0,
+        {
+            "control_mode": "ee_pose",
+        },
+    )
+    new_obs = new_env.step(EMPTY_ACTION)
+    assert obs_history[0] != new_obs
 
 
 def test_parallel_libero():
