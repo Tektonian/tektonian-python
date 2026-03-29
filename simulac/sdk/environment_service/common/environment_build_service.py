@@ -14,7 +14,7 @@ from simulac.sdk.environment_service.common.model.entity import (
     EnvironmentCameraEntity,
     EnvironmentLightEntity,
     EnvironmentMachineEntity,
-    EnvironmentObjectEntity,
+    EnvironmentStuffEntity,
 )
 from simulac.sdk.log_service.common.log_service import ILogService
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     )
 
 type EnvironmentEntityType = Union[
-    EnvironmentObjectEntity,
+    EnvironmentStuffEntity,
     EnvironmentMachineEntity,
     EnvironmentCameraEntity,
     EnvironmentLightEntity,
@@ -131,17 +131,10 @@ class EnvironmentBuildService(IEnvironmentBuildService):
             f"{self.__ID_PREFIX}{len(self.env_entities_map.get(env.id, []))}"
         )
 
-        # region TODO: Remove entity copy code here
-        entity = deepcopy(entity)
-        entity.uuid = new_entity_id
-
-        print(entity, entity.uuid)
-        # end-region
-
         if env.id not in self.env_entities_map.keys():
             self.env_entities_map[env.id] = []
 
-        if isinstance(entity, EnvironmentObjectEntity):
+        if isinstance(entity, EnvironmentStuffEntity):
             env.objects.append(entity)
             self.LogService.debug(
                 f"Environment {env.id} append Object Enitty {new_entity_id}"

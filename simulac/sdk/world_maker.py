@@ -15,7 +15,7 @@ from simulac.sdk.environment_service.common.model.entity import (
     EnvironmentCameraEntity,
     EnvironmentLightEntity,
     EnvironmentMachineEntity,
-    EnvironmentObjectEntity,
+    EnvironmentStuffEntity,
 )
 from simulac.sdk.log_service.common.log_service import ILogService
 from simulac.sdk.runner_service.common.runner_service import (
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     Position = tuple[float, float, float]
     Quaternion = tuple[float, float, float, float]
     type WorldEntity = (
-        EnvironmentObjectEntity
+        EnvironmentStuffEntity
         | EnvironmentMachineEntity
         | EnvironmentCameraEntity
         | EnvironmentLightEntity
@@ -81,7 +81,7 @@ class WorldMakerFacade:
         """
         rendering = RenderingComponent(mesh_uri, texture_uri)
         physics = MJCFPhysicsComponent(physics_uri_or_prebuilt_name)
-        entity = EnvironmentObjectEntity(rendering, physics, name)
+        entity = EnvironmentStuffEntity(rendering, physics, name)
 
         return entity
 
@@ -105,7 +105,7 @@ class WorldMakerFacade:
 
         entity_id = ""
 
-        if isinstance(entity, EnvironmentObjectEntity):
+        if isinstance(entity, EnvironmentStuffEntity):
             env.objects.append(entity)
             entity_id = f"ent_stu_{len(env.objects)}"
         elif isinstance(entity, EnvironmentMachineEntity):

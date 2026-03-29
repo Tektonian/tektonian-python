@@ -10,7 +10,7 @@ from simulac.sdk.environment_service.common.model.entity import (
     EnvironmentCameraEntity,
     EnvironmentLightEntity,
     EnvironmentMachineEntity,
-    EnvironmentObjectEntity,
+    EnvironmentStuffEntity,
 )
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ class IEnvironment(ABC):
 
     benchmark_specific_args: dict[str, Any]
 
-    objects: list[EnvironmentObjectEntity] = field(default_factory=list)
+    objects: list[EnvironmentStuffEntity] = field(default_factory=list)
     cameras: list[EnvironmentCameraEntity] = field(default_factory=list)
     lights: list[EnvironmentLightEntity] = field(default_factory=list)
     machines: list[EnvironmentMachineEntity] = field(default_factory=list)

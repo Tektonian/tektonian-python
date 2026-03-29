@@ -79,7 +79,7 @@ class EnvironmentLightEntity:
         self.quat = quat
 
 
-class EnvironmentObjectEntity:
+class EnvironmentStuffEntity:
     def __init__(
         self,
         rendering: RenderingComponent,
