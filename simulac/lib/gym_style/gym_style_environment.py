@@ -38,6 +38,7 @@ class BenchmarkEnvironment:
         self.benchmark_id = benchmark_id
         self.remote_env_id = remote_env_id
         self.benchmark_specific_kwargs = benchmark_specific_kwargs
+        self.init_seed = seed
 
         self._socket: ClientConnection | None = None
 
@@ -46,18 +47,28 @@ class BenchmarkEnvironment:
         if self._socket:
             return
 
+        query_param = urllib.parse.urlencode({"api_key": ""})
         base_url = urllib.parse.urlparse(self.runtime.envvar_service.base_url)
         base_url = base_url._replace(
             scheme="ws" if base_url.scheme == "http" else "wss",
             path=os.path.join(
                 base_url.path,
-                f"container/{self.benchmark_id}/{self.remote_env_id}",
+                f"container/{self.benchmark_id}",
             ),
+            query=query_param,
         )
         url = base_url.geturl()
+        print(url)
         self._socket = connect(url)
         msg = json.dumps(
-            {"command": "build_env", "args": self.benchmark_specific_kwargs}
+            {
+                "command": "build_env",
+                "args": {
+                    "env_id": self.remote_env_id,
+                    "seed": self.init_seed,
+                    **self.benchmark_specific_kwargs,
+                },
+            }
         )
         self._socket.send(msg)
         recv = self._socket.recv(decode=False)

@@ -9,7 +9,7 @@ from .gym_style_environment import BenchmarkEnvironment, BenchmarkVecEnvironment
 def init_bench(
     benchmark_id: str,
     env_id: str,
-    seed: Optional[int] = 0,
+    seed: int = 0,
     /,
     benchmark_specific: dict[str, Any] = {},
 ) -> BenchmarkEnvironment: ...
@@ -17,14 +17,14 @@ def init_bench(
 def init_bench(
     benchmark_id: str,
     env_id: None,
-    seed: Optional[int] = 0,
+    seed: int = 0,
     /,
     benchmark_specific: dict[str, Any] = {},
 ) -> BenchmarkVecEnvironment: ...
 def init_bench(
     benchmark_id: str,
     env_id: Optional[str],
-    seed: Optional[int] = 0,
+    seed: int = 0,
     /,
     benchmark_specific: dict[str, Any] = {},
 ):
