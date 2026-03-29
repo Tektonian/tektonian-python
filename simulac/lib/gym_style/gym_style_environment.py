@@ -7,7 +7,8 @@ import urllib.parse
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING, Any, MutableMapping, Tuple
 
-import json_numpy
+import msgpack
+import zstd
 from websockets.sync.client import ClientConnection, connect
 
 from simulac.sdk import obtain_runtime
@@ -59,7 +60,10 @@ class BenchmarkEnvironment:
             {"command": "build_env", "args": self.benchmark_specific_kwargs}
         )
         self._socket.send(msg)
-        recv = json_numpy.loads(self._socket.recv())
+        recv = self._socket.recv(decode=False)
+        recv = zstd.uncompress(recv)
+        recv = msgpack.unpackb(recv)
+        # recv = json_numpy.loads(self._socket.recv())
         print("connect")
 
     def step(self, action: list[float]) -> GymEnvStepReturnType:
@@ -69,8 +73,16 @@ class BenchmarkEnvironment:
 
         self._socket.send(json.dumps({"command": "step", "args": {"action": action}}))
 
-        recv = json_numpy.loads(self._socket.recv())
-        print("recv")
+        """
+        Transfered data size
+        On Libero
+         - Before packing: ~2MB
+         - After packing: 500KB
+         - After compression: 200KB
+        """
+        recv = self._socket.recv(decode=False)
+        recv = zstd.uncompress(recv)
+        recv: dict = msgpack.unpackb(recv)
         return recv
 
     def reset(self):

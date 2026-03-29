@@ -45,6 +45,8 @@ dependencies = [
     "mujoco>=3.5.0",
     "websockets>=15.0.1",
     "typer>=0.24.1",
+    "zstd>=1.5.7.3",
+    "msgpack>=1.1.2",
 ]
 
 [project.scripts]
