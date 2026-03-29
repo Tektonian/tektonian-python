@@ -68,7 +68,7 @@ class Environment:
             entity_id = self.world_maker.add_entity(
                 self._env.id, entity._entity, pos=pos, quat=quat
             )
-            return StuffObject(entity_id, _prevent_user_direct_call=True)
+            return StuffObject(entity_id, _prevent_user_direct_call=False)
         elif isinstance(entity, Robot):
             # change entity pos and quat
             # should call 'self.world_maker.change_eneity_pos' ?
@@ -77,7 +77,7 @@ class Environment:
 
             entity_id = self.world_maker.add_entity(self._env.id, entity._entity)
 
-            return RobotObject(entity_id, _prevent_user_direct_call=True)
+            return RobotObject(entity_id, _prevent_user_direct_call=False)
         else:
             raise NotImplementedError("Camera and light are not implemented")
 
