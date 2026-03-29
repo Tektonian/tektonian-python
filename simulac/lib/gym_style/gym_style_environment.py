@@ -46,10 +46,12 @@ class BenchmarkEnvironment:
             return
 
         base_url = urllib.parse.urlparse(self.runtime.envvar_service.base_url)
-        base_url._replace(
+        base_url = base_url._replace(
+            scheme="ws" if base_url.scheme == "http" else "wss",
             path=os.path.join(
-                base_url.path, f"container/{self.benchmark_id}/{self.remote_env_id}"
-            )
+                base_url.path,
+                f"container/{self.benchmark_id}/{self.remote_env_id}",
+            ),
         )
         url = base_url.geturl()
         self._socket = connect(url)
