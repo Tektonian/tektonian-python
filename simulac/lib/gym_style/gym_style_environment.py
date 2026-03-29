@@ -85,13 +85,15 @@ class BenchmarkEnvironment:
         recv: dict = msgpack.unpackb(recv)
         return recv
 
-    def reset(self):
+    def reset(self, seed: int = 0):
 
         if self._socket is None:
             self._connect()
 
-        self._socket.send(json.dumps({"command": "reset", "args": {}}))
-        recv = json_numpy.loads(self._socket.recv())
+        self._socket.send(json.dumps({"command": "reset", "args": {"seed": seed}}))
+        recv = self._socket.recv(decode=False)
+        recv = zstd.decompress(recv)
+        recv = msgpack.unpackb(recv)
         return recv
 
     def close(self):
