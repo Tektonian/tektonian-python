@@ -87,7 +87,7 @@ dev = [
 
 # END - project setting
 
-# START - tool setting
+# START - linting tool setting
 [tool.ruff.lint]
 select = ["E", "F", "I", "TC004"]
 ignore = ["F401"]
@@ -99,15 +99,21 @@ exclude = ["trash"]
 [tool.pyright]
 stubPath = ".typings"
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
-
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
+
+# END - linting tool setting
+
+# START - build tool
 
 [tool.uv.build-backend]
 module-name = "simulac"
 module-root = ""
 source-include = ["simulac/**"]
 
-# END - tool setting
+# END - build tool
+
+# START - testing tool
+[tool.pytest.ini_options]
+pythonpath = ["."]
+# END - testing tool
