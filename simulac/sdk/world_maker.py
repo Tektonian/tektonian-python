@@ -62,13 +62,13 @@ class WorldMakerFacade:
 
         return env_ret[0]
 
-    def create_entity(
+    def create_stuff_entity(
         self,
         name: str,
         physics_uri_or_prebuilt_name: str,
         mesh_uri: str,
         texture_uri: str,
-    ) -> WorldEntity:
+    ) -> EnvironmentStuffEntity:
         """_summary_
             TODO:
                 1. Handle various name. Expected strings are
@@ -82,6 +82,25 @@ class WorldMakerFacade:
         rendering = RenderingComponent(mesh_uri, texture_uri)
         physics = MJCFPhysicsComponent(physics_uri_or_prebuilt_name)
         entity = EnvironmentStuffEntity(rendering, physics, name)
+
+        return entity
+
+    def create_machine_entity(
+        self,
+        name: str,
+        physics_uri_or_prebuilt_name: str,
+    ) -> EnvironmentMachineEntity:
+        """_summary_
+            TODO:
+                1. Handle various name. Expected strings are
+                    - Tektonian/cup/cup0 [object with remote owner]
+                    - https://tektonian.com/~~ [remote asset]
+                    - ./home/mjcf.xml [local asset]
+                2. Seperate cases for mjcf, urdf, usd
+        Args:
+            obj_uri_or_prebuilt_name (str): _description_
+        """
+        entity = EnvironmentMachineEntity(name, "", physics_uri_or_prebuilt_name)
 
         return entity
 

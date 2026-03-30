@@ -4,6 +4,10 @@ from typing import List, Literal, Tuple, overload
 
 from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
+from simulac.sdk.environment_service.common.model.entity import (
+    EnvironmentMachineEntity,
+    EnvironmentStuffEntity,
+)
 
 from .entity import Camera, Light, Robot, Stuff
 
@@ -18,10 +22,10 @@ class Environment:
         default_engine: Literal["mujoco", "newton", "genesis"] = "mujoco",
         env_uri_or_prebuilt_id: str | None = None,
     ) -> None:
-        self.world_maker = obtain_runtime().world_maker
+        self._world_maker = obtain_runtime().world_maker
 
         self.default_engine = default_engine
-        self._env = self.world_maker.create_environment(
+        self._env = self._world_maker.create_environment(
             default_engine, env_uri_or_prebuilt_id
         )
 
@@ -61,23 +65,20 @@ class Environment:
     ) -> StuffObject | RobotObject | CameraObject | LightObject:
 
         if isinstance(entity, Stuff):
-            # change entity pos and quat
-            # should call 'self.world_maker.change_eneity_pos' ?
-            entity._entity.pos = pos
-            entity._entity.quat = quat
-            entity_id = self.world_maker.add_entity(
-                self._env.id, entity._entity, pos=pos, quat=quat
+            env_stuff_obj = self._world_maker.create_stuff_entity(
+                entity.name, entity.obj_uri_or_prebuilt_name, "", ""
             )
-            return StuffObject(entity_id, _prevent_user_direct_call=False)
+            self._world_maker.add_entity(
+                self._env.id, env_stuff_obj, pos=pos, quat=quat
+            )
+            return StuffObject(env_stuff_obj, _prevent_user_direct_call=False)
         elif isinstance(entity, Robot):
-            # change entity pos and quat
-            # should call 'self.world_maker.change_eneity_pos' ?
-            entity._entity.pos = pos
-            entity._entity.quat = quat
+            env_robot_obj = self._world_maker.create_machine_entity(
+                entity.name, entity.obj_uri_or_prebuilt_name
+            )
+            self._world_maker.add_entity(self._env.id, env_robot_obj)
 
-            entity_id = self.world_maker.add_entity(self._env.id, entity._entity)
-
-            return RobotObject(entity_id, _prevent_user_direct_call=False)
+            return RobotObject(env_robot_obj, _prevent_user_direct_call=False)
         else:
             raise NotImplementedError("Camera and light are not implemented")
 
@@ -106,18 +107,22 @@ class Runner:
 
     def get_state(self): ...
 
-    def __debug_render(self):
-        return self._runner.__debug_render()
+    def _debug_render(self):
+        return self._runner._debug_render()
 
 
 class StuffObject:
     def __init__(
-        self, entity_id: str, /, *, _prevent_user_direct_call: bool = True
+        self,
+        entity: EnvironmentStuffEntity,
+        /,
+        *,
+        _prevent_user_direct_call: bool = True,
     ) -> None:
         if _prevent_user_direct_call == True:
             raise SimulacBaseError("Please do not create stuff object directly")
 
-        self.entity_id = entity_id
+        self._entity = entity
 
     def set_mass(self, mass: float) -> None: ...
 
@@ -128,12 +133,16 @@ class StuffObject:
 
 class RobotObject:
     def __init__(
-        self, entity_id: str, /, *, _prevent_user_direct_call: bool = True
+        self,
+        entity: EnvironmentMachineEntity,
+        /,
+        *,
+        _prevent_user_direct_call: bool = True,
     ) -> None:
         if _prevent_user_direct_call == True:
             raise SimulacBaseError("Please do not create stuff object directly")
 
-        self.entity_id = entity_id
+        self._entity = entity
 
     def set_posture(self, pos: List[float]) -> None: ...
 
