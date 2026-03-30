@@ -11,6 +11,7 @@ import msgpack
 import zstd
 from websockets.sync.client import ClientConnection, connect
 
+from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
 
 type GymEnvStepReturnType = Tuple[
@@ -46,6 +47,28 @@ class BenchmarkEnvironment:
 
         if self._socket:
             return
+
+        api_key = self._runtime.environment_variable.token
+        if api_key is None:
+            self._runtime.logger.error(
+                "\n".join(
+                    [
+                        "",
+                        "Api key for remote benchmark service not found",
+                        "Please visit https://tektonian.com/settings/token to get service token",
+                        "If you already have one. Enter `simulac login` command in your terminal and enter your api-key",
+                    ]
+                )
+            )
+            raise SimulacBaseError(
+                "\n".join(
+                    [
+                        "Api key not found",
+                        "Please visit https://tektonian.com/settings/token to get a api-key",
+                        "Or enter your api-key with `simulac login` command",
+                    ]
+                )
+            )
 
         query_param = urllib.parse.urlencode({"api_key": ""})
         base_url = urllib.parse.urlparse(self._runtime.environment_variable.base_url)
