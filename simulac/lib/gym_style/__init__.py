@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Optional, overload
 
+from simulac.sdk.runtime import obtain_runtime
+
 from .gym_style_environment import BenchmarkEnvironment, BenchmarkVecEnvironment
 
 
@@ -46,6 +48,29 @@ def init_bench(
     Returns:
         ret (BenchmarkEnvironment|BenchmarkVecEnvironment):
     """
+    runtime = obtain_runtime()
+    split_benchmark_id = benchmark_id.split("/")
+    normalized_benchmark_id = benchmark_id.strip()
+
+    if len(split_benchmark_id) != 2:
+        runtime.logger.warn(
+            "\n".join(
+                [
+                    f"Invalid benchmark_id {benchmark_id!r}. ",
+                    "Expected '<organization>/<benchmark>', ",
+                    "for example 'Tektonian/Libero'.",
+                ]
+            )
+        )
+    elif normalized_benchmark_id != benchmark_id:
+        runtime.logger.warn(
+            "\n".join(
+                [
+                    f"benchmark_id has leading or trailing spaces: {benchmark_id!r}. "
+                    f"Use {normalized_benchmark_id!r}."
+                ]
+            )
+        )
 
     if env_id is None:
         vec_env = BenchmarkVecEnvironment([])
