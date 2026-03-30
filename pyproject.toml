@@ -41,10 +41,11 @@ dependencies = [
     "pydantic<3",
     "duckdb>=1.4",
     "structlog>=25.5.0",
-    "json-numpy>=2.1.1",
     "mujoco>=3.5.0",
     "websockets>=15.0.1",
     "typer>=0.24.1",
+    "zstd>=1.5.7.3",
+    "msgpack>=1.1.2",
 ]
 
 [project.scripts]
@@ -85,7 +86,7 @@ dev = [
 
 # END - project setting
 
-# START - tool setting
+# START - linting tool setting
 [tool.ruff.lint]
 select = ["E", "F", "I", "TC004"]
 ignore = ["F401"]
@@ -97,15 +98,24 @@ exclude = ["trash"]
 [tool.pyright]
 stubPath = ".typings"
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
-
-[lint.isort]
+[tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
+
+# END - linting tool setting
+
+# START - build tool
 
 [tool.uv.build-backend]
 module-name = "simulac"
 module-root = ""
 source-include = ["simulac/**"]
 
-# END - tool setting
+# END - build tool
+
+# START - testing tool
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests requiring external web service",
+]
+pythonpath = ["."]
+# END - testing tool

@@ -9,6 +9,7 @@ from simulac.sdk.environment_service.common.environment_service import (
 )
 from simulac.sdk.log_service.common.log_service import ILogService
 from simulac.sdk.runner_service.common.runner_service import IRunnerManagementService
+from simulac.sdk.telemetry_service.common.telemetry_service import ITelemetryService
 
 from .main import instantiate_service
 from .world_maker import WorldMakerFacade
@@ -27,21 +28,25 @@ class SimulacRuntime:
         verbose = flags.verbose
         quite = flags.quiet
 
-        self.runner_management_service: IRunnerManagementService = (
+        self._runner_management_service: IRunnerManagementService = (
             instantiate_service.service_accessor.get(IRunnerManagementService)
         )
 
-        self.log_service: ILogService = instantiate_service.service_accessor.get(
+        self._log_service: ILogService = instantiate_service.service_accessor.get(
             ILogService
         )
-        self.environment_management_service: IEnvironmentManagementService = (
+        self._environment_management_service: IEnvironmentManagementService = (
             instantiate_service.service_accessor.get(IEnvironmentManagementService)
         )
-        self.environment_build_service: IEnvironmentBuildService = (
+        self._environment_build_service: IEnvironmentBuildService = (
             instantiate_service.service_accessor.get(IEnvironmentBuildService)
         )
-        self.envvar_service: IEnvvarService = instantiate_service.service_accessor.get(
+        self._envvar_service: IEnvvarService = instantiate_service.service_accessor.get(
             IEnvvarService
+        )
+
+        self._telemetry_service: ITelemetryService = (
+            instantiate_service.service_accessor.get(ITelemetryService)
         )
 
         self._world_maker: WorldMakerFacade = instantiate_service.create_instance(
@@ -52,6 +57,21 @@ class SimulacRuntime:
     def world_maker(self):
         """Return world maker facade"""
         return self._world_maker
+
+    @property
+    def logger(self) -> ILogService:
+        """Return logger facade"""
+        return self._log_service
+
+    @property
+    def environment_variable(self) -> IEnvvarService:
+        """Return environment variable facade"""
+        return self._envvar_service
+
+    @property
+    def telemetry(self) -> ITelemetryService:
+        """Return telemetry variable facade"""
+        return self._telemetry_service
 
 
 _SINGLETON_SIMULATION_OBJECT_CACHE: SimulacRuntime | None = None
