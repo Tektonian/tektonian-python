@@ -3,7 +3,7 @@ description: File a bug report.
 title: "[BUG]: "
 labels: []
 projects: []
-assignees:
+assignees: []
 type: bug
 body:
   - type: markdown
@@ -28,8 +28,6 @@ body:
           - Linux (use `uname -a`)\n
 
           - MacOS (use `unmae -a`)\n
-      multiple: true
-      options:
   - type: textarea
     id: logs
     attributes:
@@ -87,6 +85,6 @@ body:
         ## Possible solution
 
         ## Related issues
-        
+
     validations:
       required: true
