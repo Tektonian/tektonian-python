@@ -1,0 +1,96 @@
+name: Bug Report
+description: File a bug report.
+title: "[BUG]: "
+labels: []
+projects: []
+assignees:
+type: bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Simulac are you running? (use `simulac --version`)
+      placeholder: simulac 0.0.1
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What OS are you seeing the problem on?
+      multiple: true
+      options:
+        - Window (use `systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"`)
+        - Linux (use `uname -a`)
+        - MacOS (use `unmae -a`)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Tektonian/simulac/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Upload screenshots
+      description: If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      label: Describe the bug
+      description: >
+        **Describe the bug**
+        A clear and concise description of what the bug is.
+
+        **To Reproduce**
+        Steps to reproduce the behavior:
+        1. Implemented code is '...'
+        2. Running result is '....'
+        3. Expected behavior is '....'
+        4. Failed to execute '....'
+
+        **Expected behavior**
+        A clear and concise description of what you expected to happen.
+        Screenshots or videos to help explain the bug make easier to reproduce and fix the bug.
+
+        **Additional context**
+        Add any other context about the problem here.
+
+        **Possible solution (if you have)**
+
+        **Related issues**
+
+      value: |
+        <!--- Description --->
+    validations:
+      required: true
