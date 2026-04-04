@@ -19,3 +19,6 @@ The contents are not intended to be permanent and may be removed in the future.
 - https://google.github.io/styleguide/pyguide.html
 
 - https://til.simonwillison.net/deno/pyodide-sandbox
+
+# Python command CI/CD plan
+- use https://lychee.cli.rs/guides/library/ for checking url location in comments is alive

@@ -1,0 +1,46 @@
+name: Feature request
+description: Ideas and suggestions to improve Simulac
+title: "[FEAT]: "
+labels: []
+projects: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        Before opening a feature request, please check
+
+        - [ ] Is this issue for opening PR and you've read contributing rules? Great! just pass this
+
+        - [ ] Is your feature request related with problems or bugs? If so, please see [CONTRIBUTING.md](https://github.com/Tektonian/simulac/blob/main/CONTRIBUTING.md)
+
+        - [ ] Search [repository issues](https://github.com/search?q=repo%3ATektonian%2Fsimulac+%5BFEAT%5D%3A&type=code) to see related or duplicated issues
+
+  - type: textarea
+    attributes:
+      label: Describe the feature
+      description: |
+        **Describe the feature**
+        Describe the feature, behavior, or workflow improvement you want to see.
+
+        **Solutions or alternatives**
+        What alternatives or workarounds have you considered?
+        Share any alternative designs, related features, or temporary workarounds you have tried.
+
+        **Extra contexts**
+        Is there any good references we can check?
+        Add references, mockups, screenshots, related issues, or any extra background that would help.
+        
+      value: |
+        ## Features
+
+        ## Improvement
+
+        ## Solutions or alternatives
+
+        ## Additional context
+
+    validations:
+      required: true
