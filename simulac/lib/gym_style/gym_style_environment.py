@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import traceback
 import urllib
 import urllib.parse
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
@@ -111,7 +112,7 @@ class BenchmarkEnvironment:
                         event_name="simulac_connection_failed",
                         data={
                             "err": err.args,
-                            "stacktrace": err.__traceback__,
+                            "stacktrace": traceback.format_exc(),
                         },
                     )
                     raise SimulacBaseError(
