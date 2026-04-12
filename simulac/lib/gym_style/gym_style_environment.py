@@ -5,12 +5,13 @@ import os
 import traceback
 import urllib
 import urllib.parse
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Tuple, Type, TypeAlias
 
 import msgpack
+import requests
 import zstd
-from websockets import InvalidHandshake
+from websockets import ConnectionClosedError, InvalidHandshake
 from websockets.sync.client import ClientConnection, connect
 
 from simulac.base.error.error import SimulacBaseError
@@ -46,6 +47,26 @@ class BenchmarkEnvironment:
         self.init_seed = seed
 
         self._socket: ClientConnection | None = None
+        self._ticket: str | None = None
+
+    def _create_ticket(self):
+        url = f"{self._runtime.environment_variable.base_url}/container/{self.benchmark_id}/preflight"
+        res = requests.post(
+            url,
+            headers={"tt-apikey": self._get_api_key()},
+            timeout=10,
+        )
+
+        if res.status_code in (403, 429):
+            try:
+                payload = res.json()
+            except Exception:
+                payload = {"error": "unknown", "message": res.text}
+            raise RuntimeError(f"preflight failed: {res.status_code} {payload}")
+
+        res.raise_for_status()
+        payload: dict = res.json()
+        self._ticket = payload.get("ticket", None)
 
     def _get_api_key(self) -> str:
         api_key = self._runtime.environment_variable.token
@@ -62,9 +83,7 @@ class BenchmarkEnvironment:
         return api_key
 
     def _build_ws_url(self) -> str:
-        query_param = urllib.parse.urlencode(
-            {"api_key": self._get_api_key(), "benchmark_id": self.benchmark_id}
-        )
+        query_param = urllib.parse.urlencode({"ticket": self._ticket})
         base_url = urllib.parse.urlparse(self._runtime.environment_variable.base_url)
         ws_scheme = {"http": "ws", "https": "wss"}.get(base_url.scheme, "wss")
         return base_url._replace(
@@ -94,6 +113,9 @@ class BenchmarkEnvironment:
 
         if self._socket is not None:
             return self._socket
+
+        if self._ticket is None:
+            self._create_ticket()
 
         url = self._build_ws_url()
 
