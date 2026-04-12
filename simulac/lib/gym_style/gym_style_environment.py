@@ -181,8 +181,14 @@ class BenchmarkEnvironment:
     def close(self):
         if self._socket is None:
             return
-        self._socket.close()
-        self._socket = None
+        try:
+            self._send_command(self._socket, "close")
+        except Exception:
+            pass
+        try:
+            self._socket.close()
+        finally:
+            self._socket = None
 
     @property
     def action_space(self): ...
