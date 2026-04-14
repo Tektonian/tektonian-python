@@ -25,6 +25,12 @@ GymEnvStepReturnType: TypeAlias = Type[
         dict[str, Any],  # info
     ]
 ]
+GymEnvResetReturnType: TypeAlias = Type[
+    Tuple[
+        dict[str, Any],  # obs
+        dict[str, Any],  # info
+    ]
+]
 
 
 class BenchmarkEnvironment:
@@ -56,12 +62,15 @@ class BenchmarkEnvironment:
             timeout=10,
         )
 
-        if res.status_code in (403, 429):
+        if res.status_code > 299:
             try:
                 payload = res.json()
             except Exception:
                 payload = {"error": "unknown", "message": res.text}
-            raise RuntimeError(f"preflight failed: {res.status_code} {payload}")
+            finally:
+                raise SimulacBaseError(
+                    f"Failed to create ticket: {res.status_code} {payload['message']}"
+                )
 
         res.raise_for_status()
         payload: dict = res.json()
@@ -133,6 +142,7 @@ class BenchmarkEnvironment:
                         event_name="simulac_connection_failed",
                         data={
                             "err": err.args,
+                            "benchmark": self.benchmark_id,
                             "stacktrace": traceback.format_exc(),
                         },
                     )
@@ -192,12 +202,62 @@ class BenchmarkEnvironment:
          - After packing: 500KB
          - After compression: 200KB
         """
-        return self._receive_packed_message(socket)
+        rcvd = self._receive_packed_message(socket)
+        try:
+            obs: dict = rcvd["obs"]
+            reward: float = rcvd["reward"]
+            done: bool = rcvd["done"]
+            info: dict = rcvd["info"]
+        except KeyError as err:
+            self._runtime._log_service.error(
+                "\n".join(
+                    [
+                        "Benchmark environment runner received an invalid field",
+                        "This error occurs when there is a problem with the benchmark protocol",
+                        "If this issue persists, please let us know!",
+                        "Discord channel: https://discord.gg/zbSaU8ZbS / Email: gangjeuk@tektonian.com",
+                    ]
+                )
+            )
+            self._runtime.telemetry.public_error(
+                event_name="simulac_step_failed",
+                data={
+                    "err": err.args,
+                    "benchmark": self.benchmark_id,
+                    "stacktrace": traceback.format_exc(),
+                },
+            )
+            raise err
+        return (obs, reward, done, info)
 
-    def reset(self, seed: int = 0):
+    def reset(self, seed: int = 0) -> GymEnvStepReturnType:
         socket = self._ensure_connected()
         self._send_command(socket, "reset", seed=seed)
-        return self._receive_packed_message(socket)
+        rcvd = self._receive_packed_message(socket)
+        try:
+            obs: dict = rcvd["obs"]
+            info: dict = rcvd["info"]
+        except KeyError as err:
+            self._runtime._log_service.error(
+                "\n".join(
+                    [
+                        "Benchmark environment runner received an invalid field",
+                        "This error occurs when there is a problem with the benchmark protocol",
+                        "If this issue persists, please let us know!",
+                        "Discord channel: https://discord.gg/zbSaU8ZbS / Email: gangjeuk@tektonian.com",
+                    ]
+                )
+            )
+            self._runtime.telemetry.public_error(
+                event_name="simulac_reset_failed",
+                data={
+                    "err": err.args,
+                    "benchmark": self.benchmark_id,
+                    "stacktrace": traceback.format_exc(),
+                },
+            )
+            raise err
+        return (obs, info)
 
     def close(self):
         if self._socket is None:
@@ -231,7 +291,7 @@ class BenchmarkVecEnvironment:
             self._runtime.logger.warn(
                 "\n".join(
                     [
-                        "Action list length is not same as Environment length.",
+                        "Action list length does not match the number of environments.",
                         f"Action[{len(actions)}] != Environment[{len(self._benchmark_envs)}]",
                     ]
                 )
@@ -270,7 +330,7 @@ class BenchmarkVecEnvironment:
 
         return results
 
-    def reset(self, seeds: list[int]):
+    def reset(self, seeds: list[int]) -> list[GymEnvResetReturnType]:
 
         def _send_reset(r: BenchmarkEnvironment, seed: int) -> None:
             socket = r._ensure_connected()
