@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 from simulac.base.envvar.envvar import IEnvvarService
@@ -7,7 +9,7 @@ from simulac.sdk.environment_service.common.environment_build_service import (
 from simulac.sdk.environment_service.common.environment_service import (
     IEnvironmentManagementService,
 )
-from simulac.sdk.log_service.common.log_service import ILogService
+from simulac.sdk.log_service.common.log_service import ILogService, LogLevel
 from simulac.sdk.runner_service.common.runner_service import IRunnerManagementService
 from simulac.sdk.telemetry_service.common.telemetry_service import ITelemetryService
 
@@ -52,6 +54,8 @@ class SimulacRuntime:
         self._world_maker: WorldMakerFacade = instantiate_service.create_instance(
             WorldMakerFacade
         )
+
+        self._log_service.set_level(LogLevel(self._envvar_service.log_level))
 
     @property
     def world_maker(self):

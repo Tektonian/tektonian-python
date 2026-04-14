@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Tuple
@@ -16,7 +18,7 @@ class LogLevel(Enum):
     ERROR = 5
 
 
-DEFAULT_LOG_LEVEL: LogLevel = LogLevel.INFO
+DEFAULT_LOG_LEVEL = LogLevel.INFO
 
 
 @service_identifier("ILogService")
@@ -53,13 +55,13 @@ class ILogService(ServiceIdentifier["ILogService"]):
 class LogService(ILogService):
     def __init__(self):
         self.logger: structlog.stdlib.BoundLogger = structlog.get_logger()
-        self.level = DEFAULT_LOG_LEVEL
+        self.logger.level = DEFAULT_LOG_LEVEL.value
 
     def set_level(self, level: LogLevel):
-        self.level = level
+        self.logger.level = level.value
 
     def get_level(self):
-        return self.level
+        return LogLevel(self.logger.level)
 
     def trace(self, message: str, *args: tuple[Tuple[Any], ...]):
         self.logger.exception(message)

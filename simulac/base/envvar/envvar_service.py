@@ -5,7 +5,7 @@ import sys
 import tempfile
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from simulac.base.envvar.envvar import IEnvvarService
 
@@ -33,17 +33,18 @@ class EnvvarService(IEnvvarService):
     KEY_VALUE = EnvvarKeyValue
 
     def __init__(self) -> None:
-        self._log_level = "info"
+        self._log_level: Literal[0, 1, 2, 3, 4, 5] = 3
 
         self._user_home = os.path.expanduser("~")
         self._tmp_dir = tempfile.gettempdir()
         self._app_root = os.getcwd()
 
     @property
-    def log_level(self) -> str:
-        level = os.environ.get(self.KEY_VALUE.SIMULAC_LOG_LEVEL.value, None)
-        if level in ["off", "trace", "debug", "info", "warning", "error"]:
-            return level
+    def log_level(self) -> Literal[0, 1, 2, 3, 4, 5]:
+        level = os.environ.get(self.KEY_VALUE.SIMULAC_LOG_LEVEL.value, "")
+        _LOG_LEVEL = ["off", "trace", "debug", "info", "warning", "error"]
+        if level.lower() in _LOG_LEVEL:
+            return _LOG_LEVEL.index(level.lower())
         else:
             return self._log_level
 

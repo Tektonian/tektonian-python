@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from pathlib import Path
+from typing import Literal
 
 from simulac.base.instantiate.instantiate import ServiceIdentifier, service_identifier
 
@@ -9,7 +12,7 @@ class IEnvvarService(ServiceIdentifier["IEnvvarService"]):
     # logging
     @property
     @abstractmethod
-    def log_level(self) -> str: ...
+    def log_level(self) -> Literal[0, 1, 2, 3, 4, 5]: ...
 
     # telemetry
     @property
