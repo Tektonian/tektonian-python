@@ -230,7 +230,7 @@ class BenchmarkEnvironment:
             raise err
         return (obs, reward, done, info)
 
-    def reset(self, seed: int = 0) -> GymEnvStepReturnType:
+    def reset(self, seed: int = 0) -> GymEnvResetReturnType:
         socket = self._ensure_connected()
         self._send_command(socket, "reset", seed=seed)
         rcvd = self._receive_packed_message(socket)
@@ -331,16 +331,35 @@ class BenchmarkVecEnvironment:
         return results
 
     def reset(self, seeds: list[int]) -> list[GymEnvResetReturnType]:
+        if len(seeds) != len(self._benchmark_envs):
+            self._runtime.logger.warn(
+                "\n".join(
+                    [
+                        "Seed list length does not match the number of environments.",
+                        f"Seed[{len(seeds)}] != Environment[{len(self._benchmark_envs)}]",
+                    ]
+                )
+            )
 
         def _send_reset(r: BenchmarkEnvironment, seed: int) -> None:
             socket = r._ensure_connected()
             r._send_command(socket, "reset", seed=seed)
 
+        def _recv_reset(r: BenchmarkEnvironment) -> GymEnvResetReturnType:
+            socket = r._ensure_connected()
+            return r._receive_packed_message(socket)
+
         with ThreadPoolExecutor(max_workers=len(self._benchmark_envs)) as ex:
-            # Phase 1: send in parallel, maintain order
+            send_futs = [
+                ex.submit(_send_reset, env, seed)
+                for env, seed in zip(self._benchmark_envs, seeds)
+            ]
+            for f in as_completed(send_futs):
+                f.result()
+
             recv_futs = {
-                ex.submit(_send_reset, z[0], z[1]): i
-                for i, z in enumerate(zip(self._benchmark_envs, seeds))
+                ex.submit(_recv_reset, env): i
+                for i, env in enumerate(self._benchmark_envs)
             }
             results: list[Any] = [None] * len(self._benchmark_envs)
             for f in as_completed(recv_futs):
