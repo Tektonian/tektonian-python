@@ -288,6 +288,7 @@ class BenchmarkVecEnvironment:
         """
 
         if len(actions) != len(self._benchmark_envs):
+            # BUG: never stop even wrong action length is given, just log warning and continue with available actions.
             self._runtime.logger.warn(
                 "\n".join(
                     [
@@ -332,6 +333,7 @@ class BenchmarkVecEnvironment:
 
     def reset(self, seeds: list[int]) -> list[GymEnvResetReturnType]:
         if len(seeds) != len(self._benchmark_envs):
+            # BUG: never stop even wrong seed length is given, just log warning and continue with available seeds.
             self._runtime.logger.warn(
                 "\n".join(
                     [
