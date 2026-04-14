@@ -7,7 +7,6 @@ from typing import (
     Any,
     Generic,
     Iterable,
-    MutableMapping,
     Type,
     TypeVar,
     cast,

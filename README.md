@@ -12,7 +12,7 @@ Simulac helps transition between the two worlds, and provides developer-friendly
 
 ## Installation
 
-Simulac requires Python 3.10 or later.
+Simulac requires Python 3.12 or later.
 
 ```bash
 $ pip install simulac
@@ -56,7 +56,7 @@ env = init_bench(
     "Tektonian/Libero",
     "libero_90/KITCHEN_SCENE2_put_the_black_bowl_at_the_back_on_the_plate",
     0,
-    {"control_mode": "ee_pose"},
+    {"control_mode": "OSC_POSE"},
 )
 
 step = env.step(ACTION_ARRAY)
@@ -72,7 +72,7 @@ args = (
     "libero_90/KITCHEN_SCENE2_put_the_black_bowl_at_the_back_on_the_plate",
     0,
 )
-options = {"benchmark_specific": {"control_mode": "ee_pose"}}
+options = {"benchmark_specific": {"control_mode": "OSC_POSE"}}
 
 envs = [init_bench(*args, **options) for _ in range(3)]
 vec_env = make_vec(envs)

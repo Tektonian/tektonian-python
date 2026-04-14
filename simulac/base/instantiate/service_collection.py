@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, List, MutableMapping, Tuple, Type, TypeVar
 
 from .descriptor import SyncDescriptor
