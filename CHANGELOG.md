@@ -1,4 +1,25 @@
 # Changelog
+## 0.0.2 (2026-04-14)
+
+Added missing packages and mostly focused on bug fixing.
+
+### Features
+
+* **lib:** remove the `group_id` parameter from `get_env_list` ([6bd1db2](https://github.com/Tektonian/Simulac/commit/6bd1db2))
+* **lib:** change gym env return type from `terminated, truncated` to `done` ([8faf1a2](https://github.com/Tektonian/Simulac/commit/8faf1a2))
+* **lib:** fix return type of `gym_env` `step` and `reset` from dict to tuple ([e502cf0](https://github.com/Tektonian/Simulac/commit/e502cf0))
+* **base,sdk:** apply the runtime log level from environment variables ([31c05f4](https://github.com/Tektonian/Simulac/commit/31c05f4))
+
+### Bug Fixes
+
+* **project:** add missed `requests` package ([0fd6fc1](https://github.com/Tektonian/Simulac/commit/0fd6fc1))
+
+### Miscellaneous Chores
+
+* **project:** change required Python version to 3.12 ([c2081f1](https://github.com/Tektonian/Simulac/commit/c2081f1))
+* **project:** prepare `0.0.2` release, clean code, and update README ([6af725c](https://github.com/Tektonian/Simulac/commit/6af725c))
+
+
 
 ## 0.0.1 (2026-04-14)
 

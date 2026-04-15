@@ -6,18 +6,19 @@
   "directories": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:release-pr": "test -n \"$GITHUB_TOKEN\" || { echo \"Error: GITHUB_TOKEN environment variable is required.\"; exit 1; }; release-please release-pr --token=\"$GITHUB_TOKEN\" --dry-run --trace --repo-url=https://github.com/Tektonian/Simulac --target-branch=main --release-type=python"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tektonian/tektonian-python.git"
+    "url": "git+https://github.com/Tektonian/Simulac.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Tektonian/tektonian-python/issues"
+    "url": "https://github.com/Tektonian/Simulac/issues"
   },
-  "homepage": "https://github.com/Tektonian/tektonian-python#readme",
+  "homepage": "https://github.com/Tektonian/Simulac#readme",
   "devDependencies": {
     "husky": "^9.1.7"
   },
