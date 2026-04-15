@@ -6,7 +6,7 @@ import traceback
 import urllib
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Tuple, Type, TypeAlias
+from typing import Any, Literal, Tuple, Type, TypeAlias
 
 import msgpack
 import requests
@@ -17,19 +17,15 @@ from websockets.sync.client import ClientConnection, connect
 from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
 
-GymEnvStepReturnType: TypeAlias = Type[
-    Tuple[
-        dict[str, Any],  # obs
-        dict[str, Any],  # reward
-        bool,  # done
-        dict[str, Any],  # info
-    ]
+GymEnvStepReturnType: TypeAlias = Tuple[
+    dict[str, Any],  # obs
+    float,  # reward
+    bool,  # done
+    dict[str, Any],  # info
 ]
-GymEnvResetReturnType: TypeAlias = Type[
-    Tuple[
-        dict[str, Any],  # obs
-        dict[str, Any],  # info
-    ]
+GymEnvResetReturnType: TypeAlias = Tuple[
+    dict[str, Any],  # obs
+    dict[str, Any],  # info
 ]
 
 
@@ -288,7 +284,6 @@ class BenchmarkVecEnvironment:
         """
 
         if len(actions) != len(self._benchmark_envs):
-            # BUG: never stop even wrong action length is given, just log warning and continue with available actions.
             self._runtime.logger.warn(
                 "\n".join(
                     [
@@ -301,39 +296,37 @@ class BenchmarkVecEnvironment:
         if not self._benchmark_envs:
             return []
 
-        # Phase 1: send in parallel
-        def _send_payload(r: BenchmarkEnvironment, action: list[float]) -> None:
-            socket = r._ensure_connected()
-            r._send_command(socket, "step", action=list(action))
-
-        def _recv_payload(r: BenchmarkEnvironment) -> GymEnvStepReturnType:
-            socket = r._ensure_connected()
-            return r._receive_packed_message(socket)
+        def _env_step(
+            env: BenchmarkEnvironment | None, action: list[float] | None
+        ) -> GymEnvStepReturnType:
+            """
+            Param `env` and `action` could be None because of `zip` function
+            and length difference is permitted
+            """
+            if env is not None and action is not None:
+                return env.step(action)
+            blame = "Environment" if env is None else "Action"
+            return (
+                {},
+                0.0,
+                False,
+                {"error": f"No observation returned since {blame} is empty"},
+            )
 
         with ThreadPoolExecutor(max_workers=len(self._benchmark_envs)) as ex:
-            send_futs = [
-                ex.submit(_send_payload, r[0], r[1])
-                for r in zip(self._benchmark_envs, actions)
-            ]
-            # Ensure all sends complete (propagate any exceptions)
-            for f in as_completed(send_futs):
-                f.result()
-
-            # Phase 2: recv in parallel, maintain order
-            recv_futs = {
-                ex.submit(_recv_payload, r): i
-                for i, r in enumerate(self._benchmark_envs)
+            ret_futs = {
+                ex.submit(_env_step, env, action): i
+                for i, (env, action) in enumerate(zip(self._benchmark_envs, actions))
             }
-            results: list[Any] = [None] * len(self._benchmark_envs)
-            for f in as_completed(recv_futs):
-                idx = recv_futs[f]
-                results[idx] = f.result()
 
-        return results
+            ret: list[Any] = [None] * len(self._benchmark_envs)
+            for f in as_completed(ret_futs):
+                idx = ret_futs[f]
+                ret[idx] = f.result()
+        return ret
 
     def reset(self, seeds: list[int]) -> list[GymEnvResetReturnType]:
         if len(seeds) != len(self._benchmark_envs):
-            # BUG: never stop even wrong seed length is given, just log warning and continue with available seeds.
             self._runtime.logger.warn(
                 "\n".join(
                     [
@@ -343,32 +336,30 @@ class BenchmarkVecEnvironment:
                 )
             )
 
-        def _send_reset(r: BenchmarkEnvironment, seed: int) -> None:
-            socket = r._ensure_connected()
-            r._send_command(socket, "reset", seed=seed)
-
-        def _recv_reset(r: BenchmarkEnvironment) -> GymEnvResetReturnType:
-            socket = r._ensure_connected()
-            return r._receive_packed_message(socket)
+        def _env_reset(
+            env: BenchmarkEnvironment | None, seed: int | None
+        ) -> GymEnvResetReturnType:
+            """
+            Param `env` and `seed` could be None because of `zip` function
+            and length difference is permitted
+            """
+            blame = "Environment" if env is None else "Seed"
+            if env is not None and seed is not None:
+                return env.reset(seed)
+            return ({}, {"error": f"No observation returned since {blame} is empty"})
 
         with ThreadPoolExecutor(max_workers=len(self._benchmark_envs)) as ex:
-            send_futs = [
-                ex.submit(_send_reset, env, seed)
-                for env, seed in zip(self._benchmark_envs, seeds)
-            ]
-            for f in as_completed(send_futs):
-                f.result()
-
-            recv_futs = {
-                ex.submit(_recv_reset, env): i
-                for i, env in enumerate(self._benchmark_envs)
+            ret_futs = {
+                ex.submit(_env_reset, env, seed): i
+                for i, (env, seed) in enumerate(zip(self._benchmark_envs, seeds))
             }
-            results: list[Any] = [None] * len(self._benchmark_envs)
-            for f in as_completed(recv_futs):
-                idx = recv_futs[f]
-                results[idx] = f.result()
-        return results
-    
+
+            ret: list[Any] = [None] * len(self._benchmark_envs)
+            for f in as_completed(ret_futs):
+                idx = ret_futs[f]
+                ret[idx] = f.result()
+        return ret
+
     def close(self):
         with ThreadPoolExecutor(max_workers=len(self._benchmark_envs)) as ex:
             close_futs = [ex.submit(env.close) for env in self._benchmark_envs]
