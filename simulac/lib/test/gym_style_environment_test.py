@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from simulac.lib.gym_style.gym_style_environment import BenchmarkVecEnvironment
 
 
@@ -46,7 +48,7 @@ class _FakeBenchmarkEnvironment:
         return self._pending_messages.pop(0)[1]
 
 
-def test_benchmark_vec_environment_reset_receives_replies_before_step() -> None:
+def test_vec_env_return_keep_order() -> None:
     envs = [_FakeBenchmarkEnvironment("env0"), _FakeBenchmarkEnvironment("env1")]
     vec_env = BenchmarkVecEnvironment(envs)  # type: ignore[arg-type]
 
