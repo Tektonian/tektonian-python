@@ -65,10 +65,12 @@ def init_bench(
             )
         )
 
+    # Rename
+    (owner_id, world_id) = split_benchmark_id
 
     env = BenchmarkEnvironment(
-        "id",
-        benchmark_id,
+        owner_id,
+        world_id,
         env_id,
         seed,
         benchmark_specific,
