@@ -102,3 +102,31 @@ def logout() -> None:
         typer.echo("No local credential file was removed.")
         typer.echo(f"Checked: {env.token_path}")
         typer.echo("Data: No Simulac API key file was present.")
+
+
+@app.command("whoami", short_help="Validate the API key against the server.")
+def whoami(
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit machine-readable JSON."),
+    ] = False,
+) -> None:
+    env = EnvvarService()
+    token_state = get_token_state(env)
+
+    if token_state.status != "present" or token_state.value is None:
+        typer.echo(
+            "A valid API key is required. Run `simulac login` or set `SIMULAC_API_KEY`.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        identity = fetch_identity(env.base_url, token_state.value)
+    except SimulacBaseError as exc:
+        typer.echo(exc.message, err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Endpoint: {identity.endpoint}")
+    typer.echo(f"User: {identity.user or 'unknown'}")
+    typer.echo(f"Email: {identity.email or 'unknown'}")
