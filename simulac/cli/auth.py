@@ -5,12 +5,11 @@ from typing import Annotated
 
 import typer
 
-# FIXME: import raw service is anti-pattern
-from simulac.base.envvar.envvar_service import EnvvarService
 from simulac.base.error.error import SimulacBaseError
 
 from .common import (
     TOKEN_PORTAL_URL,
+    cast_context,
     fetch_identity,
     get_token_state,
     mask_secret,
@@ -50,6 +49,7 @@ def _save_token(token_path: Path, token: str) -> None:
     ),
 )
 def login(
+    ctx: typer.Context,
     apikey: Annotated[
         str | None,
         typer.Option(
@@ -61,7 +61,7 @@ def login(
         ),
     ] = None,
 ) -> None:
-    env = EnvvarService()
+    env = cast_context(ctx).runtime.environment_variable
 
     if apikey is None:
         typer.echo("No API key provided. Nothing was saved.", err=True)
@@ -89,8 +89,8 @@ def login(
         "This deletes the local file created by `simulac auth login` when it exists."
     ),
 )
-def logout() -> None:
-    env = EnvvarService()
+def logout(ctx: typer.Context) -> None:
+    env = cast_context(ctx).runtime.environment_variable
     stored_token = read_token(env.token_path)
 
     if env.token_path.exists():
@@ -105,16 +105,11 @@ def logout() -> None:
 
 
 @app.command("whoami", short_help="Validate the API key against the server.")
-def whoami(
-    json_output: Annotated[
-        bool,
-        typer.Option("--json", help="Emit machine-readable JSON."),
-    ] = False,
-) -> None:
-    env = EnvvarService()
+def whoami(ctx: typer.Context) -> None:
+    env = cast_context(ctx).runtime.environment_variable
     token_state = get_token_state(env)
 
-    if token_state.status != "present" or token_state.value is None:
+    if token_state.status != "PRESENT" or token_state.value is None:
         typer.echo(
             "A valid API key is required. Run `simulac login` or set `SIMULAC_API_KEY`.",
             err=True,

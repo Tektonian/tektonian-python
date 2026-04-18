@@ -4,13 +4,14 @@ import os
 
 import typer
 
-from simulac.base.envvar.envvar_service import EnvvarKeyValue, EnvvarService
+from simulac.base.envvar.envvar_service import EnvvarKeyValue
 
-from .common import collect_config_snapshot, mask_secret
+from .common import cast_context, collect_config_snapshot, mask_secret
 
 
-def show_config() -> None:
-    payload = collect_config_snapshot(EnvvarService())
+def show_config(ctx: typer.Context) -> None:
+    env = cast_context(ctx).runtime.environment_variable
+    payload = collect_config_snapshot(env)
     max_key_length = max(len(key) for key in payload.keys())
 
     for key in payload.keys():
