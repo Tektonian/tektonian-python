@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from .auth import app as auth_app
+from .benchmark import app as benchmark_app
 from .common import TOKEN_PORTAL_URL
 from .config import show_config, show_envvars
 
@@ -48,6 +49,7 @@ def _version_command() -> None:
 
 
 app.add_typer(auth_app, name="auth", rich_help_panel="Main commands")
+app.add_typer(benchmark_app, name="benchmark", rich_help_panel="Main commands")
 app.command(
     "config",
     short_help="Show the effective Simulac configuration.",
