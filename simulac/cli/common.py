@@ -3,12 +3,17 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import requests
+import typer
 
-from simulac.base.envvar.envvar_service import EnvvarKeyValue, EnvvarService
+from simulac.base.envvar.envvar_service import EnvvarKeyValue
 from simulac.base.error.error import SimulacBaseError
+
+if TYPE_CHECKING:
+    from simulac.sdk.runtime import SimulacRuntime
+from simulac.base.envvar.envvar_service import IEnvvarService
 
 TOKEN_PORTAL_URL = "https://tektonian.com/settings/token"
 LOG_LEVEL_NAMES = ("off", "trace", "debug", "info", "warning", "error")
@@ -29,6 +34,16 @@ class IdentityResult:
     email: str | None
 
 
+@dataclass(slots=True)
+class CliContext:
+    runtime: SimulacRuntime
+
+
+def cast_context(ctx: typer.Context) -> CliContext:
+    runtime = ctx.obj["runtime"]
+    return CliContext(runtime)
+
+
 def mask_secret(secret: str | None) -> str | None:
     if not secret:
         return None
@@ -47,7 +62,7 @@ def read_token(token_path: Path) -> str | None:
     return token or None
 
 
-def get_token_state(env: EnvvarService) -> TokenState:
+def get_token_state(env: IEnvvarService) -> TokenState:
     env_token = os.environ.get(EnvvarKeyValue.SIMULAC_API_KEY.value)
     file_token = read_token(env.token_path)
 
@@ -71,8 +86,8 @@ def get_token_state(env: EnvvarService) -> TokenState:
     )
 
 
-def collect_config_snapshot(env: EnvvarService | None = None) -> dict[str, Any]:
-    env = env or EnvvarService()
+def collect_config_snapshot(env: IEnvvarService) -> dict[str, Any]:
+    env = env
     token_state = get_token_state(env)
     log_level_index = env.log_level
     log_level = (

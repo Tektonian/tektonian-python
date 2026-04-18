@@ -6,6 +6,8 @@ from typing import Annotated
 
 import typer
 
+from simulac.sdk import obtain_runtime
+
 from .auth import app as auth_app
 from .benchmark import app as benchmark_app
 from .common import TOKEN_PORTAL_URL
@@ -50,6 +52,7 @@ def _version_option_callback(value: bool) -> None:
 
 @app.callback()
 def root_callback(
+    ctx: typer.Context,
     version: Annotated[
         bool,
         typer.Option(
@@ -60,6 +63,8 @@ def root_callback(
         ),
     ] = False,
 ) -> None:
+    runtime = obtain_runtime()
+    ctx.obj = {"runtime": runtime}
     del version
 
 
