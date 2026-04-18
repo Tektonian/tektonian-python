@@ -36,16 +36,26 @@ def _package_version() -> str:
         return "unknown"
 
 
-def _show_version(value: bool) -> None:
+def _version_option_callback(value: bool) -> None:
     if not value:
         return
-
-    typer.echo(f"simulac {_package_version()}")
+    typer.echo(f"{_package_version()}")
     raise typer.Exit()
 
 
-def _version_command() -> None:
-    typer.echo(f"simulac {_package_version()}")
+@app.callback()
+def root_callback(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            help="Show the installed Simulac version and exit.",
+            is_eager=True,
+            callback=_version_option_callback,
+        ),
+    ] = False,
+) -> None:
+    del version
 
 
 app.add_typer(auth_app, name="auth", rich_help_panel="Main commands")
