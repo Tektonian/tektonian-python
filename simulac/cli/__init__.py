@@ -7,6 +7,9 @@ from typing import Annotated
 import typer
 
 from .auth import app as auth_app
+from .common import TOKEN_PORTAL_URL
+from .config import show_config, show_envvars
+
 APP_HELP = "Simulac CLI"
 
 APP_EPILOG = "\n\n".join(
@@ -45,6 +48,16 @@ def _version_command() -> None:
 
 
 app.add_typer(auth_app, name="auth", rich_help_panel="Main commands")
+app.command(
+    "config",
+    short_help="Show the effective Simulac configuration.",
+    rich_help_panel="Help commands",
+)(show_config)
+app.command(
+    "env",
+    short_help="Show raw Simulac environment variables.",
+    rich_help_panel="Help commands",
+)(show_envvars)
 
 
 def main() -> None:
