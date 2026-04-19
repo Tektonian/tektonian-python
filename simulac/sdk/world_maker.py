@@ -80,9 +80,11 @@ class WorldMakerFacade:
         Args:
             obj_uri_or_prebuilt_name (str): _description_
         """
+        # TODO: @gangjeuk
+        # handle both cases, file://home/gangjeuk/fanda.xml and https://remote/fanda.xml
         rendering = RenderingComponent(mesh_uri, texture_uri)
         physics = MJCFPhysicsComponent(physics_uri_or_prebuilt_name)
-        entity = EnvironmentStuffEntity(rendering, physics, name)
+        entity = EnvironmentStuffEntity(None, name, "", rendering, physics)
 
         return entity
 
@@ -101,8 +103,28 @@ class WorldMakerFacade:
         Args:
             obj_uri_or_prebuilt_name (str): _description_
         """
-        entity = EnvironmentMachineEntity(name, "", physics_uri_or_prebuilt_name)
+        # TODO: @gangjeuk
+        # handle both cases, file://home/gangjeuk/fanda.xml and https://remote/fanda.xml
+        entity = EnvironmentMachineEntity(None, name, "", physics_uri_or_prebuilt_name)
 
+        return entity
+
+    def create_camera_entity(
+        self,
+        name: str,
+        type: Literal[
+            "rgb", "tactile", "depth", "pointcloud", "normal", "segmentation"
+        ] = "rgb",
+    ):
+        entity = EnvironmentCameraEntity(None, name, "", type)
+        return entity
+
+    def create_light_entity(
+        self,
+        name: str,
+        type: Literal["ambient", "pointlight", "reactarea", "spot"],
+    ):
+        entity = EnvironmentLightEntity(None, name, "", type, (0xFF, 0xFF, 0xFF))
         return entity
 
     def add_entity(
@@ -124,18 +146,26 @@ class WorldMakerFacade:
         env = env_ret[0]
         entity_id = ""
 
+        if entity.id is not None:
+            # Should not reach
+            raise SimulacBaseError("Entity should not have id property")
+
         if isinstance(entity, EnvironmentStuffEntity):
-            env.objects.append(entity)
             entity_id = f"ent_stu_{len(env.objects)}"
+            entity.id = entity_id
+            env.objects.append(entity)
         elif isinstance(entity, EnvironmentMachineEntity):
-            env.machines.append(entity)
             entity_id = f"ent_mac_{len(env.machines)}"
+            entity.id = entity_id
+            env.machines.append(entity)
         elif isinstance(entity, EnvironmentCameraEntity):
-            env.cameras.append(entity)
             entity_id = f"ent_cam_{len(env.cameras)}"
-        elif isinstance(entity, EnvironmentLightEntity):
-            env.lights.append(entity)
+            entity.id = entity_id
+            env.cameras.append(entity)
+        elif isinstance(entity, EnvironmentLightEntity):  # pyright: ignore[reportUnnecessaryIsInstance]
             entity_id = f"ent_lig_{len(env.lights)}"
+            entity.id = entity_id
+            env.lights.append(entity)
         else:
             # Should not reach
             raise SimulacBaseError(f"Unknown environment entity type: {entity}")
