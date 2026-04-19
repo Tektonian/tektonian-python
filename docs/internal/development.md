@@ -6,7 +6,7 @@ So before you start, install [`Node.js`](https://nodejs.org) first.
 
 ```bash
 uv sync --group dev --all-extras
-npm ci
+npm install
 ```
 
 # Background
@@ -25,7 +25,7 @@ Before you get started, review the references below:
 We follow semantic versioning rule.
 First of all, to understand version updating rules, it is RECOMMENDED to see the overall structure of [`Simulac`](./architecture.md).
 
-Major and mijor version updates depend on whether a change affects the user-surface API, which is exposed through the `/simulac/lib` directory.
+Major and minor version updates depend on whether a change affects the user-surface API, which is exposed through the `/simulac/lib` directory.
 
 - If a release includes incompatible changes to the user-facing API, increment the major version (`1.x.x` -> `2.x.x`).
 - If a release includes user-facing API changes that remain backward compatible, increment the minor version (`x.1.x` -> `x.2.x`).
@@ -175,6 +175,8 @@ Before opening a pull request, run the checks that apply to your change.
 
 ```bash
 uv run pytest -q -m "not integration"
-uv run ruff check .
-uv run pyright
+uv run ruff check ./simulac
+uv run pyright ./simulac
 ```
+>We know the codebase currently contains a number of warnings and errors.
+>Because the project is still evolving, we ask contributors to resolve as many existing issues as possible before submitting new code.
