@@ -409,6 +409,7 @@ class ParallelRunner:
         seeds: list[int] | None = None,
         tick: list[int] | None = None,
         record_locations: list[str] | None = None,
+        strict: bool = True,
     ) -> None: ...
 
     def step(self, actions: list[list[float]]) -> None: ...
