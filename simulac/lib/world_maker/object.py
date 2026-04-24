@@ -44,6 +44,7 @@ class Environment:
         entity: Stuff,
         pos: Tuple[float, float, float] = (0, 0, 0),
         quat: Tuple[float, float, float, float] = (0, 0, 0, 1),
+        name: str = "",
         description: str | None = None,
     ) -> StuffObject: ...
     @overload
@@ -52,6 +53,7 @@ class Environment:
         entity: Camera,
         pos: Tuple[float, float, float] = (0, 0, 0),
         quat: Tuple[float, float, float, float] = (0, 0, 0, 1),
+        name: str = "",
         description: str | None = None,
     ) -> CameraObject: ...
     @overload
@@ -60,6 +62,7 @@ class Environment:
         entity: Light,
         pos: Tuple[float, float, float] = (0, 0, 0),
         quat: Tuple[float, float, float, float] = (0, 0, 0, 1),
+        name: str = "",
         description: str | None = None,
     ) -> LightObject: ...
     @overload
@@ -68,6 +71,7 @@ class Environment:
         entity: Robot[ActionT],
         pos: Tuple[float, float, float] = (0, 0, 0),
         quat: Tuple[float, float, float, float] = (0, 0, 0, 1),
+        name: str = "",
         description: str | None = None,
     ) -> RobotObject[ActionT]: ...
     def place_entity(
@@ -75,13 +79,14 @@ class Environment:
         entity: Stuff | Robot[ActionT] | Camera | Light,
         pos: Tuple[float, float, float] = (0, 0, 0),
         quat: Tuple[float, float, float, float] = (0, 0, 0, 1),
+        name: str | None = None,
         description: str | None = None,
     ) -> StuffObject | RobotObject[ActionT] | CameraObject | LightObject:
         description = description or ""
 
         if isinstance(entity, Stuff):
             env_stuff_obj = self._world_maker.create_stuff_entity(
-                entity.name or "", description, entity.obj_uri_or_prebuilt_name, "", ""
+                name, description, entity.obj_uri_or_prebuilt_name, "", ""
             )
             self._world_maker.add_entity(
                 self._env.id, env_stuff_obj, pos=pos, quat=quat
@@ -89,7 +94,7 @@ class Environment:
             return StuffObject(env_stuff_obj, _create_sentinal=_CREATE_SENTINAL)
         elif isinstance(entity, Robot):
             env_robot_obj = self._world_maker.create_machine_entity(
-                entity.name or "", description, entity.obj_uri_or_prebuilt_name
+                name, description, entity.obj_uri_or_prebuilt_name
             )
             self._world_maker.add_entity(
                 self._env.id, env_robot_obj, pos=pos, quat=quat
@@ -100,7 +105,7 @@ class Environment:
             )
         elif isinstance(entity, Camera):
             env_camera_obj = self._world_maker.create_camera_entity(
-                entity.name, description, entity.type
+                name, description, entity.type
             )
             self._world_maker.add_entity(
                 self._env.id, env_camera_obj, pos=pos, quat=quat
@@ -108,7 +113,7 @@ class Environment:
             return CameraObject(env_camera_obj, _create_sentinal=_CREATE_SENTINAL)
         elif isinstance(entity, Light):  # pyright: ignore[reportUnnecessaryIsInstance]
             env_light_obj = self._world_maker.create_light_entity(
-                entity.name, description, entity.type
+                name, description, entity.type
             )
             self._world_maker.add_entity(
                 self._env.id, env_light_obj, pos=pos, quat=quat

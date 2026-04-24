@@ -10,21 +10,18 @@ ActionT = TypeVar("ActionT", bound=Sequence[float], default=list[float])
 
 
 class Stuff:
-    def __init__(self, obj_uri_or_prebuilt_name: str, name: str | None = None) -> None:
-        self.name = name
+    def __init__(self, obj_uri_or_prebuilt_name: str) -> None:
         self.obj_uri_or_prebuilt_name = obj_uri_or_prebuilt_name
 
 
 class Robot(Generic[ActionT]):
-    def __init__(self, obj_uri_or_prebuilt_name: str, name: str | None = None) -> None:
-        self.name = name
+    def __init__(self, obj_uri_or_prebuilt_name: str) -> None:
         self.obj_uri_or_prebuilt_name = obj_uri_or_prebuilt_name
 
 
 class Camera:
     def __init__(
         self,
-        name: str,
         type: Literal[
             "rgb", "tactile", "depth", "pointcloud", "normal", "segmentation"
         ] = "rgb",
@@ -35,7 +32,6 @@ class Camera:
         near: Union[RandomizableFloat, float] = 100.0,
         far: Union[RandomizableFloat, float] = 1000.0,
     ):
-        self.name = name
         self.type = type
         self.mode = mode
         self.lookat = lookat
@@ -48,12 +44,10 @@ class Camera:
 class Light:
     def __init__(
         self,
-        name: str,
         type: Literal["ambient", "pointlight", "reactarea", "spot"] = "spot",
         color: Union[RandomizableVec3, tuple[int, int, int]] = (0xFF, 0xFF, 0xFF),
         intensity: Union[RandomizableFloat, float] = 0.8,
     ):
-        self.name = name
         self.type = type
         self.color = color
         self.intensity = intensity
