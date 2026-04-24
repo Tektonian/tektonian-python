@@ -270,6 +270,10 @@ class Runner:
 
     def tick(self): ...
 
+    type State = Any
+
+    def reset(self) -> State: ...
+
     def get_state(self): ...
 
     @overload
