@@ -87,6 +87,20 @@ class StuffRuntime:
     def change_friction(self, friction: float) -> None: ...
     def change_density(self, density: float) -> None: ...
 
+    def joint(self, name: str) -> None: ...
+        """Runtime joint control
+        See object.py:StuffObject
+        TODO: @gangjeuk
+        implement code
+        
+        # common api
+        joint = runtime_obj.joint("joint_name")
+        
+        joint.get_pos()        
+        joint.get_vel()
+        joint.change_pos(Vec3)
+        joint.change_target(value)
+        """
 
 class RobotRuntime(Generic[ActionT]):
     def __init__(

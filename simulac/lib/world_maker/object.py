@@ -267,6 +267,35 @@ class StuffObject:
                 margin=0.04
             )
         """
+    
+    type JointRef = Any
+    def joint(self, name: str) -> JointRef:
+        """When user want to control joint
+        TODO: @gangjeuk
+        implement code (TOO many TODOs)
+
+        # Same as collision mesh control, we do not provide asset editing
+        
+        # named joint reference
+        slide = drawer.joint("slide")
+        
+        # build-time initial state
+        slide.set_pos(Randomize.uniform(0.0, 0.15))
+        
+        # optional joint-level randomization
+        slide.set_friction(Randomize.uniform(0.1, 0.5))
+        slide.set_damping(Randomize.uniform(0.02, 0.2))
+        
+        # get articulated state
+        pull_pose = drawer.anchor("handle_grasp").pose
+        
+        # exposed readonly properties
+        joint.pose
+        joint.axis
+        joint.limit
+        joint.type
+        
+        """
 
     def set_mass(self, mass: RandomizableFloat) -> None:
         # do assertion first
