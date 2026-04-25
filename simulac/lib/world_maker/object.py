@@ -199,6 +199,75 @@ class StuffObject:
 
         self._entity = entity
 
+    type ColliderRef = Any
+
+    def collider(self, name: str) -> ColliderRef: ...
+        """When user want to customize collision mesh.
+        TODO: @gangjeuk
+        write codes.
+        
+        Example:
+            # named collider reference
+            # Asset author is responsible for the adequate name of collision mesh
+            # Simulac will not support asset editing, edit mjcf, urdf, usd by yourself!
+            
+            # named collider reference and set randomization
+            table.collider("top").set_friction(Randomize.uniform(0.3, 1.5))
+            
+            # geometry derived placement
+            cube.set_pos(table.collider("top").surface("up").center)
+            
+            # semantic author-defined reference
+            # `.anchor` is specific location of an asset defined by an asset author
+            # For example
+            #   <!--MJCF-->
+            #   <body name="table">
+            #       <geom name="top" type="box" pos="0 0 0.75" size="0.6 0.4 0.03" />
+            #       <site name="workspace_center" pos="0 0 0.79" />
+            #       <site name="robot_mount" pos="-0.45 0 0.78" />
+            #   </body>
+            robot.set_pos(table.anchor("workspace_center").pos)
+
+            # In case of normal 3d asset like .obj and .glb
+            # Each node name should be the name of collision mesh
+            GLB nodes:
+            - top
+            - robot_mount
+            
+            OBJ groups:
+            g top
+            g robot_mount      
+            
+            # ColliderRef type example
+            
+            table.anchor("place_area")      # semantic author-defined reference
+            
+            top = table.collider("top")     # named collision shape
+            
+            top.center      # collider volume center
+            top.pose        # collider frame pos
+            top.bounds      # world-space bounds (AABB/OBB-ish)
+            top.bounds.center
+            top.bounds.max
+            top.bounds.min
+            top.bounds.size
+            
+            top.surface("up").center    # center of contact surface
+            top.surface("up").normal    # normal vector of contact surface
+            top.support((0, 0, 1), frame="world")  # outer contact feature toward world +Z
+            top.support((0, 0, 1), frame="local")  # outer contact feature toward local +Z
+            
+            top.surface("up").sample(margin=0.04)      # Generate a target point on the table, offset by 4cm from all edges.
+            
+            # When user want to place something on another thing
+            table.place(
+                mug,
+                on="top" # table collision mesh name
+                using=mug.collider("bottom").support((0, 0, -1), frame="local")
+                margin=0.04
+            )
+        """
+
     def set_mass(self, mass: RandomizableFloat) -> None:
         # do assertion first
         # self._env._assert_mutate()
