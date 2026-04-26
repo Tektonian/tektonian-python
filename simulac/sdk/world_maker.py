@@ -67,8 +67,6 @@ class WorldMakerFacade:
         self,
         name: str,
         physics_uri_or_prebuilt_name: str,
-        mesh_uri: str,
-        texture_uri: str,
     ) -> EnvironmentStuffEntity:
         """_summary_
             TODO:
