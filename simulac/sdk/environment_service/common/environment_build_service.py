@@ -27,6 +27,7 @@ if TYPE_CHECKING:
         URDFPhysicsComponent,
         USDPhysicsComponent,
     )
+    from simulac.sdk.environment_service.common.randomize import RandomizableVec3
 
 type EnvironmentEntityType = Union[
     EnvironmentStuffEntity,
@@ -43,6 +44,9 @@ class IEnvironmentBuildService(ServiceIdentifier["IEnvironmentBuildService"]):
         self,
         env_id: str,
         entity: EnvironmentEntityType,
+        entity_id: str | None = None,
+        pos: RandomizableVec3 = (0, 0, 0),
+        rot: RandomizableVec3 = (0, 0, 0),
     ) -> str: ...
 
     @abstractmethod
@@ -119,6 +123,9 @@ class EnvironmentBuildService(IEnvironmentBuildService):
         self,
         env_id: str,
         entity: EnvironmentEntityType,
+        entity_id: str | None = None,
+        pos: RandomizableVec3 = (0, 0, 0),
+        rot: RandomizableVec3 = (0, 0, 0),
     ):
         """TODO: only support local file for now
         1. add remote support http, https

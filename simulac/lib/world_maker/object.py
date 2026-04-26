@@ -117,46 +117,38 @@ class Environment:
         description = description or ""
 
         if isinstance(entity, Stuff):
-            if entity_id is None:
-                entity_id = f"stuff_{len(self._env.stuffs)}"
             env_stuff_obj = self._world_maker.create_stuff_entity(
-                entity_id, description, entity.obj_uri_or_prebuilt_name, "", ""
+                entity.obj_uri_or_prebuilt_name, description=description
             )
             self._world_maker.add_entity(
-                self._env.id, env_stuff_obj, pos=pos, quat=quat
+                self._env.id, env_stuff_obj, entity_id, pos=pos, rot=rot
             )
             return StuffObject(env_stuff_obj, _create_sentinal=_CREATE_SENTINAL)
         elif isinstance(entity, Robot):
-            if entity_id is None:
-                entity_id = f"robot_{len(self._env.machines)}"
             env_robot_obj = self._world_maker.create_machine_entity(
-                entity_id, description, entity.obj_uri_or_prebuilt_name
+                entity.obj_uri_or_prebuilt_name, description=description
             )
             self._world_maker.add_entity(
-                self._env.id, env_robot_obj, pos=pos, quat=quat
+                self._env.id, env_robot_obj, entity_id, pos=pos, rot=rot
             )
             return cast(
                 "RobotObject[ActionT]",
                 RobotObject(env_robot_obj, _create_sentinal=_CREATE_SENTINAL),
             )
         elif isinstance(entity, Camera):
-            if entity_id is None:
-                entity_id = f"camera_{len(self._env.machines)}"
             env_camera_obj = self._world_maker.create_camera_entity(
-                entity_id, description, entity.type
+                entity._to_spec(), description=description
             )
             self._world_maker.add_entity(
-                self._env.id, env_camera_obj, pos=pos, quat=quat
+                self._env.id, env_camera_obj, entity_id, pos=pos, rot=rot
             )
             return CameraObject(env_camera_obj, _create_sentinal=_CREATE_SENTINAL)
         else:
-            if entity_id is None:
-                entity_id = f"light_{len(self._env.lights)}"
             env_light_obj = self._world_maker.create_light_entity(
-                entity_id, description, entity.type
+                entity._to_spec(), description=description
             )
             self._world_maker.add_entity(
-                self._env.id, env_light_obj, pos=pos, quat=quat
+                self._env.id, env_light_obj, entity_id, pos=pos, rot=rot
             )
             return LightObject(env_light_obj, _create_sentinal=_CREATE_SENTINAL)
 
