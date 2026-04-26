@@ -105,6 +105,7 @@ FloatListRandomSpec: TypeAlias = RandomSpec[list[float]]
 BoolRandomSpec: TypeAlias = RandomSpec[bool]
 
 RandomizableFloat: TypeAlias = Randomizable[float]
+type RandomizableTuple[*Ts] = Randomizable[tuple[*Ts]]
 RandomizableVec3: TypeAlias = Randomizable[Vec3]
 RandomizableQuat: TypeAlias = Randomizable[Quat]
 RandomizableColor: TypeAlias = Randomizable[ColorRgb]

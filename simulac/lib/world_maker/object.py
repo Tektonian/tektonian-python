@@ -21,8 +21,19 @@ if TYPE_CHECKING:
         Vec3,
     )
 
-from .entity import ActionT, Camera, Light, Robot, Stuff
+from .entity import (
+    ActionT,
+    AmbientLight,
+    AreaLight,
+    Camera,
+    PointLight,
+    Robot,
+    SpotLight,
+    Stuff,
+)
 
+if TYPE_CHECKING:
+    from .entity import LightType
 # Sentinal pattern: https://python-patterns.guide/python/sentinel-object/
 _CREATE_SENTINAL = object()
 
@@ -80,7 +91,7 @@ class Environment:
     @overload
     def add_entity(
         self,
-        entity: Light,
+        entity: LightType,
         pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
@@ -97,7 +108,7 @@ class Environment:
     ) -> RobotObject[ActionT]: ...
     def add_entity(
         self,
-        entity: Stuff | Robot[ActionT] | Camera | Light,
+        entity: Stuff | Robot[ActionT] | Camera | LightType,
         pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
@@ -138,7 +149,7 @@ class Environment:
                 self._env.id, env_camera_obj, pos=pos, quat=quat
             )
             return CameraObject(env_camera_obj, _create_sentinal=_CREATE_SENTINAL)
-        elif isinstance(entity, Light):  # pyright: ignore[reportUnnecessaryIsInstance]
+        else:
             if entity_id is None:
                 entity_id = f"light_{len(self._env.lights)}"
             env_light_obj = self._world_maker.create_light_entity(
@@ -148,8 +159,9 @@ class Environment:
                 self._env.id, env_light_obj, pos=pos, quat=quat
             )
             return LightObject(env_light_obj, _create_sentinal=_CREATE_SENTINAL)
-        else:
-            raise NotImplementedError("Camera and light are not implemented")
+
+        # Should not reach
+        raise NotImplementedError("Wrong entity")
 
     type SurfaceRef = Any
     type AnchorRef = Any
