@@ -1,25 +1,27 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Literal, Tuple, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Literal, cast, overload
 
 from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
-from simulac.sdk.environment_service.common.model.entity import (
-    EnvironmentCameraEntity,
-    EnvironmentLightEntity,
-    EnvironmentMachineEntity,
-    EnvironmentStuffEntity,
-)
+
+if TYPE_CHECKING:
+    from simulac.sdk.environment_service.common.model.entity import (
+        EnvironmentCameraEntity,
+        EnvironmentLightEntity,
+        EnvironmentMachineEntity,
+        EnvironmentStuffEntity,
+    )
+    from simulac.sdk.environment_service.common.randomize import (
+        Randomizable,
+        RandomizableBool,
+        RandomizableColor,
+        RandomizableFloat,
+        RandomizableVec3,
+        Vec3,
+    )
 
 from .entity import ActionT, Camera, Light, Robot, Stuff
-from .randomize import (
-    Randomizable,
-    RandomizableBool,
-    RandomizableColor,
-    RandomizableFloat,
-    RandomizableVec3,
-    Vec3,
-)
 
 # Sentinal pattern: https://python-patterns.guide/python/sentinel-object/
 _CREATE_SENTINAL = object()
@@ -96,7 +98,7 @@ class Environment:
     def add_entity(
         self,
         entity: Stuff | Robot[ActionT] | Camera | Light,
-        pos: Tuple[float, float, float] = (0, 0, 0),
+        pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
         description: str | None = None,

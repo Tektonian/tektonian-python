@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Generic, Literal, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Literal, Sequence, TypeVar, Union
 
 from typing_extensions import TypeVar
 
-from .randomize import RandomizableFloat, RandomizableVec3
+if TYPE_CHECKING:
+    from simulac.sdk.environment_service.common.randomize import (
+        RandomizableFloat,
+        RandomizableVec3,
+    )
 
 ActionT = TypeVar("ActionT", bound=Sequence[float], default=list[float])
 
