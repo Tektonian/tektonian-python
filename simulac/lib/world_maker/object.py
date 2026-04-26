@@ -61,7 +61,7 @@ class Environment:
     def add_entity(
         self,
         entity: Stuff,
-        pos: Tuple[float, float, float] = (0, 0, 0),
+        pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
         description: str | None = None,
@@ -70,7 +70,7 @@ class Environment:
     def add_entity(
         self,
         entity: Camera,
-        pos: Tuple[float, float, float] = (0, 0, 0),
+        pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
         description: str | None = None,
@@ -79,7 +79,7 @@ class Environment:
     def add_entity(
         self,
         entity: Light,
-        pos: Tuple[float, float, float] = (0, 0, 0),
+        pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
         description: str | None = None,
@@ -88,7 +88,7 @@ class Environment:
     def add_entity(
         self,
         entity: Robot[ActionT],
-        pos: Tuple[float, float, float] = (0, 0, 0),
+        pos: RandomizableVec3 = (0, 0, 0),
         rot: RandomizableVec3 = (0, 0, 0),
         entity_id: str | None = None,
         description: str | None = None,
