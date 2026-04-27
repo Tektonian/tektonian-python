@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         URDFPhysicsComponent,
         USDPhysicsComponent,
     )
+    from simulac.sdk.environment_service.common.model.ref import BuildOpType
     from simulac.sdk.environment_service.common.randomize import (
         RandomizableBool,
         RandomizableColor,
@@ -31,6 +32,7 @@ class EnvironmentMachineEntity:
     action_max: list[float] | None = None
     action_min: list[float] | None = None
 
+    build_ops: list = field(default_factory=list)
 
 @dataclass(slots=True)
 class EnvironmentStuffEntity:
