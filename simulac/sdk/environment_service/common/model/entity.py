@@ -26,7 +26,7 @@ class EnvironmentMachineEntity:
     id: str | None = None
     description: str = ""
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
     init_position: RandomizableFloatList | None = None
     action_max: list[float] | None = None
@@ -34,13 +34,14 @@ class EnvironmentMachineEntity:
 
     build_ops: list = field(default_factory=list)
 
+
 @dataclass(slots=True)
 class EnvironmentStuffEntity:
     id: str | None = None
     description: str = ""
     asset_uri: list[str] = []
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
     size: RandomizableVec3 = (1, 1, 1)
     fixed: RandomizableBool = True
 
@@ -48,7 +49,7 @@ class EnvironmentStuffEntity:
 @dataclass(slots=True)
 class TransformSpec:
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
 
 @dataclass(slots=True)
@@ -147,7 +148,7 @@ class EnvironmentLightEntity:
     id: str | None = None
     description: str = ""
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
     spec: LightSpec = field(default_factory=PointLightSpec)
 
     attach: AttachSpec | None = None
@@ -178,7 +179,7 @@ class EnvironmentCameraEntity:
     description: str = ""
     spec: CameraSpec = field(default_factory=CameraSpec)
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
     attach: AttachSpec | None = None
     look_at: LookAtSpec | None = None
