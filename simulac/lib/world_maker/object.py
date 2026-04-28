@@ -79,6 +79,21 @@ class Environment:
 
     # NOTE: @gangjeuk
     # Should be `place()`?
+
+    # Entity ID pattern
+    #   entity_id: lower_snake_case
+    #   qualified ref: <entity_id>.<kind>.<name>
+    # e.g., entity_id
+    #   table
+    #   red_cube
+    #   panda
+    #   front_rgb
+    # e.g., qualified_ref
+    #   table.collider.top
+    #   table.anchor.workspace_center
+    #   panda.joint.wrist_1
+    #   front_rgb.camera.output
+
     @overload
     def add_entity(
         self,
@@ -184,6 +199,11 @@ class Environment:
         self._assert_mutable()
         if obj._entity.id is None:
             raise SimulacBaseError("Entity must be added to Environment first")
+
+        # TODO: @gangjeuk
+        # [ ] - verify before place
+        # [ ] - change `_entity.build_ops` to `_env.relations`
+
         obj._entity.build_ops.append(
             PlaceOp(
                 EntityRef(obj._entity.id),
