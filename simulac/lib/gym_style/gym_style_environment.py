@@ -17,19 +17,45 @@ from websockets.sync.client import ClientConnection, connect
 from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
 
-GymEnvStepReturnType: TypeAlias = Tuple[
+type GymEnvStepReturnType = Tuple[
     dict[str, Any],  # obs
     float,  # reward
     bool,  # done
     dict[str, Any],  # info
 ]
-GymEnvResetReturnType: TypeAlias = Tuple[
+"""Gym style `.step()` function return type.
+If follows basic gymnasium style of `(obs, reward, done, info) = env.reset()`
+For detailed `.keys()` of `obs` and `info` goto https://tektonian.com/benchmark page,
+and see specs for each benchmark.
+
+Raises:
+    SimulacBaseError: When error occured in server side
+
+"""
+type GymEnvResetReturnType = Tuple[
     dict[str, Any],  # obs
     dict[str, Any],  # info
 ]
+"""Gym style `.reset()` function return type.
+If follows basic gymnasium style of `(obs, info) = env.reset()`
+
+Raises:
+    SimulacBaseError: When error occured in server side
+"""
+
+__KEYERROR_MESSAGE = "\n".join(
+    [
+        "Benchmark environment runner received an invalid field",
+        "This error occurs when there is a problem with the benchmark protocol",
+        "If this issue persists, please let us know!",
+        "Discord channel: https://discord.gg/zbSaU8ZbS / Email: gangjeuk@tektonian.com",
+    ]
+)
 
 
 class BenchmarkEnvironment:
+    """Gym style benchmark environment."""
+
     def __init__(
         self,
         owner_id: str,
