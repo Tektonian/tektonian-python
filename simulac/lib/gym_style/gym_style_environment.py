@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import traceback
 import urllib
 import urllib.parse
@@ -11,7 +12,11 @@ from typing import Any, Literal, Tuple, Type, TypeAlias
 import msgpack
 import requests
 import zstd
-from websockets import ConnectionClosedError, InvalidHandshake
+from websockets import (
+    ConnectionClosed,
+    ConnectionClosedError,
+    InvalidHandshake,
+)
 from websockets.sync.client import ClientConnection, connect
 
 from simulac.base.error.error import SimulacBaseError
@@ -67,7 +72,7 @@ class BenchmarkEnvironment:
 
         self._runtime = obtain_runtime()
 
-        self.runner_id = str("")
+        self.runner_id: str = str("")
         self.owner_id = owner_id
         self.world_id = world_id
         self.benchmark_id = f"{owner_id}/{world_id}"
@@ -78,9 +83,25 @@ class BenchmarkEnvironment:
         self._socket: ClientConnection | None = None
         self._ticket: str | None = None
 
+        # Step history storage for error recovering
+        # When connection is lost, repeat senario with same step value
+        self.__step_history: list[list[float]] = []
+        self.__error_recovery_count = 0
+        self.__MAX_ERROR_RECOVERY_COUNT = 5
+        self.__last_reset_seed = seed
+
         # Warning message flags
         self._has_reset = False
         self._warned_step_before_reset = False
+
+    def _is_network_alive(self):
+        try:
+            # Connect to Google's public DNS (8.8.8.8) on port 53
+            socket.create_connection(("8.8.8.8", 53), timeout=5)
+            return True
+        except Exception:
+            pass
+        return False
 
     def _create_ticket(self):
         url = f"{self._runtime.environment_variable.base_url}/container/{self.owner_id}/{self.world_id}/preflight"
@@ -219,46 +240,26 @@ class BenchmarkEnvironment:
         payload = socket.recv(decode=False)
         return msgpack.unpackb(zstd.decompress(payload))
 
-    def step(self, action: list[float]) -> GymEnvStepReturnType:
+    def _drop_socket(self) -> None:
+        if self._socket is not None:
+            try:
+                self._socket.close()
+            except Exception:
+                pass
 
-        socket = self._ensure_connected()
+        self._socket = None
+        self._ticket = None
 
-        if not self._has_reset and not self._warned_step_before_reset:
-            self._runtime.logger.warn(
-                "\n".join(
-                    [
-                        "Unexpected behavior: step() was called before reset()."
-                        f"benchmark_id={self.benchmark_id!r}, env_id={self.env_id!r}"
-                    ]
-                )
-            )
-            self._warned_step_before_reset = True
-
-        self._send_command(socket, "step", action=list(action))
-        """
-        NOTE: Transfered data size
-        On Libero
-         - Before packing: ~2MB
-         - After packing: 500KB
-         - After compression: 200KB
-        """
-        rcvd = self._receive_packed_message(socket)
+    def _parse_step_response(self, rcvd: dict) -> GymEnvStepReturnType:
         try:
-            obs: dict = rcvd["obs"]
-            reward: float = rcvd["reward"]
-            done: bool = rcvd["done"]
-            info: dict = rcvd["info"]
-        except KeyError as err:
-            self._runtime._log_service.error(
-                "\n".join(
-                    [
-                        "Benchmark environment runner received an invalid field",
-                        "This error occurs when there is a problem with the benchmark protocol",
-                        "If this issue persists, please let us know!",
-                        "Discord channel: https://discord.gg/zbSaU8ZbS / Email: gangjeuk@tektonian.com",
-                    ]
-                )
+            return (
+                rcvd["obs"],
+                rcvd["reward"],
+                rcvd["done"],
+                rcvd["info"],
             )
+        except KeyError as err:
+            self._runtime.logger.error(__KEYERROR_MESSAGE)
             self._runtime.telemetry.public_error(
                 event_name="simulac_step_failed",
                 data={
@@ -267,28 +268,24 @@ class BenchmarkEnvironment:
                     "stacktrace": traceback.format_exc(),
                 },
             )
-            raise err
-        return (obs, reward, done, info)
+            raise
 
-    def reset(self, seed: int = 0) -> GymEnvResetReturnType:
+    def _step_once(self, action: list[float]) -> GymEnvStepReturnType:
+        socket = self._ensure_connected()
+        self._send_command(socket, "step", action=list(action))
+        rcvd = self._receive_packed_message(socket)
+        return self._parse_step_response(rcvd)
+
+    def _reset_once(self, seed: int) -> GymEnvResetReturnType:
         socket = self._ensure_connected()
         self._send_command(socket, "reset", seed=seed)
         rcvd = self._receive_packed_message(socket)
+
         try:
             self.runner_id = rcvd.get("id", "")
-            obs: dict = rcvd["obs"]
-            info: dict = rcvd["info"]
+            return rcvd["obs"], rcvd["info"]
         except KeyError as err:
-            self._runtime._log_service.error(
-                "\n".join(
-                    [
-                        "Benchmark environment runner received an invalid field",
-                        "This error occurs when there is a problem with the benchmark protocol",
-                        "If this issue persists, please let us know!",
-                        "Discord channel: https://discord.gg/zbSaU8ZbS / Email: gangjeuk@tektonian.com",
-                    ]
-                )
-            )
+            self._runtime.logger.error(__KEYERROR_MESSAGE)
             self._runtime.telemetry.public_error(
                 event_name="simulac_reset_failed",
                 data={
@@ -297,10 +294,93 @@ class BenchmarkEnvironment:
                     "stacktrace": traceback.format_exc(),
                 },
             )
-            raise err
+            raise
+
+    def _recover_and_replay(self, pending_action: list[float]) -> GymEnvStepReturnType:
+        history = [list(action) for action in self.__step_history]
+        actions_to_replay = history + [list(pending_action)]
+
+        last_result: GymEnvStepReturnType | None = None
+
+        self._runtime.logger.warn(
+            "\n".join(
+                [
+                    "Recovering benchmark environment after connection failure.",
+                    f"Benchmark: {self.benchmark_id}",
+                    f"Runner: {self.runner_id}",
+                    f"attempt={self.__error_recovery_count}/{self.__MAX_ERROR_RECOVERY_COUNT}",
+                ]
+            )
+        )
+
+        for attempt in range(1, self.__MAX_ERROR_RECOVERY_COUNT + 1):
+            try:
+                self._runtime.logger.debug(
+                    f"Runner: {self.runner_id}, Recovering attempt: {attempt}"
+                )
+                self._drop_socket()
+                self._ensure_connected()
+                self._reset_once(self.__last_reset_seed)
+
+                for idx, action in enumerate(actions_to_replay):
+                    last_result = self._step_once(action)
+                    self._runtime.logger.debug(
+                        f"recovery={idx + 1}/{len(actions_to_replay)}"
+                    )
+                self._runtime.logger.info(f"Runner: {self.runner_id} recovered")
+                self.__step_history = actions_to_replay
+                self.__error_recovery_count = 0
+                return last_result
+
+            except (
+                ConnectionClosed,
+                ConnectionClosedError,
+                TimeoutError,
+                OSError,
+            ) as _:
+                self.__error_recovery_count = attempt
+                continue
+
+        raise SimulacBaseError(
+            f"Failed to recover benchmark environment after "
+            f"{self.__MAX_ERROR_RECOVERY_COUNT} attempts."
+        )
+
+    def step(self, action: list[float]) -> GymEnvStepReturnType:
+        action_copy = list(action)
+
+        if not self._has_reset and not self._warned_step_before_reset:
+            self._runtime.logger.warn(
+                "\n".join(
+                    [
+                        "Unexpected behavior: step() was called before reset().",
+                        f"benchmark_id={self.benchmark_id!r}, env_id={self.env_id!r}",
+                    ]
+                )
+            )
+            self._warned_step_before_reset = True
+
+        try:
+            result = self._step_once(action_copy)
+        except (ConnectionClosed, ConnectionClosedError, TimeoutError, OSError) as err:
+            if self._is_network_alive() is False:
+                raise err
+            result = self._recover_and_replay(action_copy)
+
+        self.__step_history.append(action_copy)
+        return result
+
+    def reset(self, seed: int = 0) -> GymEnvResetReturnType:
+        result = self._reset_once(seed)
+
+        self.__last_reset_seed = seed
+        self.__step_history.clear()
+        self.__error_recovery_count = 0
+
         self._has_reset = True
         self._warned_step_before_reset = False
-        return (obs, info)
+
+        return result
 
     def close(self):
         self._has_reset = False
@@ -311,10 +391,7 @@ class BenchmarkEnvironment:
             self._send_command(self._socket, "close")
         except Exception:
             pass
-        try:
-            self._socket.close()
-        finally:
-            self._socket = None
+        self._drop_socket()
 
     @property
     def action_space(self): ...
