@@ -248,7 +248,7 @@ class MujocoRunner(IRunner):
     def __init__(
         self,
         runner_id: str,
-        env_id: str,
+        env: IEnvironment,
         mj_model: mujoco.MjModel,
         entities: dict[str, EnvironmentMachineEntity | EnvironmentStuffEntity],
         bindings: dict[str, MujocoEntityBinding],
@@ -256,7 +256,7 @@ class MujocoRunner(IRunner):
     ) -> None:
         self.runner_type = "mujoco"
         self.runner_id = runner_id
-        self.env_id = env_id
+        self.env = env
         self.mj_model = mj_model
         self._entities = entities
         self._bindings = bindings
@@ -329,7 +329,6 @@ class MujocoRunner(IRunner):
                     value = getattr(entity, name)
                     if value is not None:
                         candidate[eid][name] = sampler.sample(value)
-            candidate[eid]["build_ops"] = entity.build_ops
         return candidate
 
     def _apply_candidate(self, candidate: dict[str, dict[str, Any]]) -> None:
@@ -355,10 +354,14 @@ class MujocoRunner(IRunner):
         mujoco.mj_forward(self.mj_model, data)
 
         for eid, values in candidate.items():
-            for op in values.get("build_ops", []):
+            ops = [
+                placeop
+                for placeop in self.env.relations
+                if placeop.entity.entity_id == eid
+            ]
+            for op in ops:
                 self._apply_build_op(eid, op, resolver)
                 mujoco.mj_forward(self.mj_model, data)
-
         mujoco.mj_setConst(self.mj_model, data)
 
     def _apply_build_op(
@@ -495,6 +498,7 @@ class MujocoAdapter(IPhysicsEngineAdapter):
             raise env_ret[1]
 
         env = env_ret[0]
+        self.env = env
 
         self._entities = {
             e.id: e for e in [*env.stuffs, *env.machines] if e.id is not None
@@ -537,7 +541,7 @@ class MujocoAdapter(IPhysicsEngineAdapter):
 
         runner = MujocoRunner(
             new_runner_id,
-            self.env_id,
+            self.env,
             mj_model=self.model,
             entities=self._entities,
             bindings=self._bindings,

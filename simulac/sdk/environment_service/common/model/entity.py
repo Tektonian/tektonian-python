@@ -30,22 +30,6 @@ class EnvironmentMachineEntity:
     action_max: list[float] | None = None
     action_min: list[float] | None = None
 
-    # TODO: @gangjeuk
-    # Move build_ops to `Environment` level
-    # 1. Seperate `Environment` spec by
-    # adding additional fields `assets: []` and `build_ops: []`
-    #
-    # Additional
-    # 1. Change `build_ops` to another good name `placements`?
-    # 2. Need ordering rule
-    # 3. Need to seperate compile-time op (e.g., random asset selection) and reset-time op (e.g., random placement)
-    #
-    # Note
-    # 1. Need to handle object deletion. (what if constranted object has been deleted?)
-    # 2. How to handle prebuilt environment merging
-    #
-    build_ops: list[BuildOpType] = field(default_factory=list)
-
 
 @dataclass(slots=True)
 class EnvironmentStuffEntity:
@@ -59,8 +43,6 @@ class EnvironmentStuffEntity:
     mass: RandomizableFloat | None = None
     friction: RandomizableFloat | None = None
     density: RandomizableFloat | None = None
-
-    build_ops: list[BuildOpType] = field(default_factory=list)
 
 
 @dataclass(slots=True)

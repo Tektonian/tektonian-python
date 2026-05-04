@@ -202,9 +202,9 @@ class Environment:
 
         # TODO: @gangjeuk
         # [ ] - verify before place
-        # [ ] - change `_entity.build_ops` to `_env.relations`
+        # [o] - change `_entity.build_ops` to `_env.relations`
 
-        obj._entity.build_ops.append(
+        self._env.relations.append(
             PlaceOp(
                 EntityRef(obj._entity.id),
                 as_place_target(on, margin=margin),

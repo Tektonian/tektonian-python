@@ -21,6 +21,15 @@ if TYPE_CHECKING:
 # https://docs.wandb.ai/models/ref/python/experiments/run#property-run-entity
 @dataclass
 class IEnvironment(ABC):
+    # TODO: @gangjeuk
+    # Additional
+    # 1. Need ordering rule for `relactions` and `constraints`
+    # 2. Need to seperate compile-time op (e.g., random asset selection) and reset-time op (e.g., random placement)
+    #
+    # Note
+    # 1. Need to handle object deletion. (what if constranted object has been deleted?)
+    # 2. How to handle prebuilt environment merging
+    #
     id: str
     world_id: str
     env_json_uri: str | SplitResult

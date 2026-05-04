@@ -114,6 +114,7 @@ class Environment(IEnvironment):
         self.cameras = []
         self.lights = []
         self.machines = []
+        self.relations = []
 
     def load_env(self): ...
 
