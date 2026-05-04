@@ -74,6 +74,7 @@ def init_bench(
         env_id,
         seed,
         benchmark_specific,
+        error_recovery_enabled=False,
     )
 
     return env
@@ -117,6 +118,8 @@ def get_env_list(benchmark_id: str) -> list[str]:
 
 
 def make_vec(envs: list[BenchmarkEnvironment]):
+    for env in envs:
+        env._set_error_recovery_enabled(True)
     vec_env = BenchmarkVecEnvironment(envs)
     return vec_env
 

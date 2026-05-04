@@ -68,6 +68,8 @@ class BenchmarkEnvironment:
         env_id: str,
         seed: int,
         benchmark_specific_kwargs: dict[str, Any],
+        *,
+        error_recovery_enabled: bool = False,
     ):
 
         self._runtime = obtain_runtime()
@@ -89,6 +91,14 @@ class BenchmarkEnvironment:
         self.__error_recovery_count = 0
         self.__MAX_ERROR_RECOVERY_COUNT = 5
         self.__last_reset_seed = seed
+        # TODO: @gangjeuk
+        # Need to discuss about how to deal with unrecoverable errors
+        # e.g., `Expected Action space is 4, but given 7` <- We should not handle this, but we do now
+        # option 1 - add error code for backend server code
+        # option 2 - seperate error recovery by cases
+        # Currently, we use option 2 by using `_error_recovery_enabled` in `init_bench()` and `make_vec()`
+        # Is it good enough?
+        self._error_recovery_enabled = error_recovery_enabled
 
         # Warning message flags
         self._has_reset = False
@@ -296,6 +306,9 @@ class BenchmarkEnvironment:
             )
             raise
 
+    def _set_error_recovery_enabled(self, enabled: bool):
+        self._error_recovery_enabled = enabled
+
     def _recover_and_replay(self, pending_action: list[float]) -> GymEnvStepReturnType:
         history = [list(action) for action in self.__step_history]
         actions_to_replay = history + [list(pending_action)]
@@ -363,7 +376,10 @@ class BenchmarkEnvironment:
         try:
             result = self._step_once(action_copy)
         except (ConnectionClosed, ConnectionClosedError, TimeoutError, OSError) as err:
-            if self._is_network_alive() is False:
+            if (
+                self._is_network_alive() is False
+                or self._error_recovery_enabled is False
+            ):
                 raise err
             result = self._recover_and_replay(action_copy)
 
