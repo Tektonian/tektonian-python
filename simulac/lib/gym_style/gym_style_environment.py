@@ -361,6 +361,7 @@ class BenchmarkEnvironment:
 
     def step(self, action: list[float]) -> GymEnvStepReturnType:
         action_copy = list(action)
+        recovered = False
 
         if not self._has_reset and not self._warned_step_before_reset:
             self._runtime.logger.warn(
@@ -382,8 +383,10 @@ class BenchmarkEnvironment:
             ):
                 raise err
             result = self._recover_and_replay(action_copy)
+            recovered = True
 
-        self.__step_history.append(action_copy)
+        if not recovered:
+            self.__step_history.append(action_copy)
         return result
 
     def reset(self, seed: int = 0) -> GymEnvResetReturnType:
