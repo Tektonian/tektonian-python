@@ -50,8 +50,8 @@ _CREATE_SENTINAL = object()
 class Environment:
     def __init__(
         self,
-        default_engine: Literal["mujoco", "newton", "genesis"] = "mujoco",
         env_uri_or_prebuilt_id: str | None = None,
+        default_engine: Literal["mujoco", "newton", "genesis"] = "mujoco",
     ) -> None:
         self._runtime = obtain_runtime()
         self._world_maker = self._runtime.world_maker
