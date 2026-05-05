@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Generic, Literal, overload
 
 from simulac.base.error.error import SimulacBaseError
+from simulac.base.types.geometry import Vec3
 from simulac.sdk import obtain_runtime
 
 from .entity import ActionT
 from .object import _CREATE_SENTINAL, Environment
-from .randomize import Vec3
 
 if TYPE_CHECKING:
     from .object import CameraObject, LightObject, RobotObject, StuffObject
@@ -38,12 +38,13 @@ class Runner:
     def step(self, action: list[float]):
         self._runner.step(action)
 
-    def tick(self): ...
+    def tick(self):
+        self._runner.tick()
 
     type State = Any
 
-    def reset(self) -> State:
-        self._runner.reset()
+    def reset(self, seed: int | None = 0) -> State:
+        self._runner.reset(seed)
 
     def get_state(self): ...
 

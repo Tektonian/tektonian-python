@@ -4,6 +4,15 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, cast, overload
 
 from simulac.base.error.error import SimulacBaseError
 from simulac.sdk import obtain_runtime
+from simulac.sdk.environment_service.common.model.ref import (
+    AnchorRef,
+    ColliderRef,
+    EntityRef,
+    JointRef,
+    PlaceOp,
+    as_place_source,
+    as_place_target,
+)
 
 if TYPE_CHECKING:
     from simulac.sdk.environment_service.common.model.entity import (
@@ -155,17 +164,12 @@ class Environment:
         # Should not reach
         raise NotImplementedError("Wrong entity")
 
-    type SurfaceRef = Any
-    type AnchorRef = Any
-    type CollideRef = Any
-    type PlaceType = SurfaceRef | AnchorRef | CollideRef
-
     def place_object(
         self,
         obj: StuffObject | RobotObject[Any],
         *,
-        on: PlaceType,
-        using: PlaceType | None,
+        on: PlaceTargetRef,
+        using: PlaceTargetRef | None = None,
         margin: RandomizableFloat = 0.0,
     ):
         """
@@ -177,6 +181,17 @@ class Environment:
             margin=0.04
         )
         """
+        self._assert_mutable()
+        if obj._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        obj._entity.build_ops.append(
+            PlaceOp(
+                EntityRef(obj._entity.id),
+                as_place_target(on, margin=margin),
+                as_place_source(using),
+                margin,
+            )
+        )
 
     @overload
     def remove_object(
@@ -227,8 +242,6 @@ class StuffObject:
             raise SimulacBaseError("Please do not create stuff object directly")
 
         self._entity = entity
-
-    type ColliderRef = Any
 
     def collider(self, name: str) -> ColliderRef:
         """When user want to customize collision mesh.
@@ -290,8 +303,10 @@ class StuffObject:
 
 
         """
-
-    type JointRef = Any
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        ref = ColliderRef(self._entity.id, name)
+        return ref
 
     def joint(self, name: str) -> JointRef:
         """When user want to control joint
@@ -320,10 +335,14 @@ class StuffObject:
         joint.type
 
         """
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        return JointRef(self._entity.id, name, _build_ops=self._entity.build_ops)
 
-    type AnchorRef = Any
-
-    def anchor(self, name: str) -> AnchorRef: ...
+    def anchor(self, name: str) -> AnchorRef:
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        return AnchorRef(self._entity.id, name)
 
     def set_mass(self, mass: RandomizableFloat) -> None:
         # do assertion first
@@ -362,9 +381,20 @@ class RobotObject(Generic[ActionT]):
     See comments on `StuffObject`
     """
 
-    def joint(self, name: str): ...
-    def collider(self, name: str): ...
-    def anchor(self, name: str): ...
+    def joint(self, name: str) -> JointRef:
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        return JointRef(self._entity.id, name, _build_ops=self._entity.build_ops)
+
+    def collider(self, name: str) -> ColliderRef:
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        return ColliderRef(self._entity.id, name, _build_ops=self._entity.build_ops)
+
+    def anchor(self, name: str) -> AnchorRef:
+        if self._entity.id is None:
+            raise SimulacBaseError("Entity must be added to Environment first")
+        return AnchorRef(self._entity.id, name)
 
 
 class CameraObject:
@@ -398,12 +428,12 @@ class CameraObject:
     def _set_noise(self): ...
     def _set_exposure(self, exposure: RandomizableFloat): ...
 
-    type AnchorRef = Any
-    type ColliderRef = Any
-    type LookAtTarget = Vec3 | AnchorRef | ColliderRef
-
     def look_at(
-        self, target: LookAtTarget, *, up: Vec3, offset: RandomizableVec3
+        self,
+        target: Vec3 | AnchorRef | ColliderRef,
+        *,
+        up: Vec3,
+        offset: RandomizableVec3,
     ) -> None: ...
 
     def attach_to(
@@ -450,13 +480,13 @@ class LightObject:
     ) -> None:
         """area only"""
 
-    type AnchorRef = Any
-    type ColliderRef = Any
-    type LookAtTarget = Vec3 | AnchorRef | ColliderRef
-
     # Below two are for headlight
     def look_at(
-        self, target: LookAtTarget, *, up: Vec3, offset: RandomizableVec3
+        self,
+        target: Vec3 | AnchorRef | ColliderRef,
+        *,
+        up: Vec3,
+        offset: RandomizableVec3,
     ) -> None: ...
 
     def attach_to(

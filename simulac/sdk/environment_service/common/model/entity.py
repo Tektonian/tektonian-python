@@ -5,11 +5,9 @@ from typing import TYPE_CHECKING, Literal, Tuple
 
 if TYPE_CHECKING:
     from simulac.sdk.environment_service.common.model.component import (
-        MJCFPhysicsComponent,
         RenderingComponent,
-        URDFPhysicsComponent,
-        USDPhysicsComponent,
     )
+    from simulac.sdk.environment_service.common.model.ref import BuildOpType
     from simulac.sdk.environment_service.common.randomize import (
         RandomizableBool,
         RandomizableColor,
@@ -24,29 +22,37 @@ if TYPE_CHECKING:
 class EnvironmentMachineEntity:
     id: str | None = None
     description: str = ""
+    asset_uri: str | None = None
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
     init_position: RandomizableFloatList | None = None
     action_max: list[float] | None = None
     action_min: list[float] | None = None
+
+    build_ops: list[BuildOpType] = field(default_factory=list)
 
 
 @dataclass(slots=True)
 class EnvironmentStuffEntity:
     id: str | None = None
     description: str = ""
-    asset_uri: list[str] = []
+    asset_uri: str | None = None
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
     size: RandomizableVec3 = (1, 1, 1)
     fixed: RandomizableBool = True
+    mass: RandomizableFloat | None = None
+    friction: RandomizableFloat | None = None
+    density: RandomizableFloat | None = None
+
+    build_ops: list[BuildOpType] = field(default_factory=list)
 
 
 @dataclass(slots=True)
 class TransformSpec:
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
 
 @dataclass(slots=True)
@@ -145,7 +151,7 @@ class EnvironmentLightEntity:
     id: str | None = None
     description: str = ""
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
     spec: LightSpec = field(default_factory=PointLightSpec)
 
     attach: AttachSpec | None = None
@@ -176,7 +182,7 @@ class EnvironmentCameraEntity:
     description: str = ""
     spec: CameraSpec = field(default_factory=CameraSpec)
     pos: RandomizableVec3 = (0, 0, 0)
-    quat: RandomizableQuat = (0, 0, 0, 1)
+    rot: RandomizableVec3 = (0, 0, 0)
 
     attach: AttachSpec | None = None
     look_at: LookAtSpec | None = None
