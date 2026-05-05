@@ -260,6 +260,7 @@ class MujocoRunner(IRunner):
         self.mj_model = mj_model
         self._entities = entities
         self._bindings = bindings
+        self._runtimes = dict[str, StuffRuntime]()
         self.state = {}
         self.on_after_call_step = on_after_call_step
         self._data: mujoco.MjData | None = None
@@ -294,6 +295,7 @@ class MujocoRunner(IRunner):
             print(self._data.body(i))
         breakpoint()
 
+    def get_runtime_object(self, entity_id: str):...
     def set_state(self) -> None: ...
     def clone_state(self) -> None: ...
     def render(self) -> None: ...
