@@ -38,6 +38,7 @@ from simulac.sdk.environment_service.common.randomize import (
     NormalRandomSpec,
     UniformRandomSpec,
 )
+from simulac.sdk.runner_service.common.model.runtime import StuffRuntime
 from simulac.sdk.runner_service.common.physics_engine_adapter import (
     IPhysicsEngineAdapter,
     IPhysicsEngineAdapterState,
@@ -45,6 +46,7 @@ from simulac.sdk.runner_service.common.physics_engine_adapter import (
 from simulac.sdk.runner_service.common.runner import IRunner, IRunnerFactory
 from simulac.sdk.runner_service.common.runner_service import IRunnerManagementService
 from simulac.sdk.runner_service.local.mujoco.binding import MujocoEntityBinding
+from simulac.sdk.runner_service.local.mujoco.runtime import MujocoStuffRuntimeOps
 
 if TYPE_CHECKING:
     from simulac.sdk.environment_service.common.environment import IEnvironment
@@ -172,14 +174,6 @@ class ResetSampler:
         return max(value, limit)
 
 
-def _wxyz_to_xyzw(quat: Any) -> list[float]:
-    return [float(quat[1]), float(quat[2]), float(quat[3]), float(quat[0])]
-
-
-def _xyzw_to_wxyz(quat: Any) -> list[float]:
-    return [float(quat[3]), float(quat[0]), float(quat[1]), float(quat[2])]
-
-
 class MujocoRefResolver:
     def __init__(self, model: mujoco.MjModel, data: mujoco.MjData) -> None:
         self.model = model
@@ -281,21 +275,25 @@ class MujocoRunner(IRunner):
             print(self._data.body(i))
         breakpoint()
 
-    def get_runtime_object(self, entity_id: str):...
+    def get_runtime_object(self, entity_id: str):
+        # breakpoint()
+        return self._runtimes.get(entity_id)
+
     def set_state(self) -> None: ...
     def clone_state(self) -> None: ...
     def render(self) -> None: ...
     def reset(self, seed: int | None = 0) -> None:
         data = self._require_data()
         sampler = ResetSampler(seed)
+        self._clean_runtime_stuff()
         for _ in range(128):
             candidate = self._sampling_candidate(sampler)
             print(candidate)
+            self._create_runtime_stuff()
             mujoco.mj_resetData(self.mj_model, data)
             self._apply_candidate(candidate)
             mujoco.mj_forward(self.mj_model, data)
             return  # self.get_state()
-
         raise SimulacBaseError("Failed to sample valid reset state")
 
     def _debug_render(self):
@@ -319,25 +317,31 @@ class MujocoRunner(IRunner):
                         candidate[eid][name] = sampler.sample(value)
         return candidate
 
+    def _clean_runtime_stuff(self) -> None:
+        self._runtimes: dict[str, StuffRuntime] = dict()
+
+    def _create_runtime_stuff(self) -> None:
+        for eid, binding in self._bindings.items():
+            ops = MujocoStuffRuntimeOps(eid, self.mj_model, self._data, binding)
+
+            stuff_runtime = StuffRuntime(eid, ops)
+            self._runtimes[eid] = stuff_runtime
+
     def _apply_candidate(self, candidate: dict[str, dict[str, Any]]) -> None:
         data = self._require_data()
         resolver = MujocoRefResolver(self.mj_model, data)
 
         for eid, values in candidate.items():
-            binding = self._bindings[eid]
-
+            runtime = self._runtimes[eid]
             pos = values.get("pos")
             if isinstance(pos, RefBase):
                 pos = resolver.resolve_point(pos)
             if pos is not None:
-                self._set_root_pos(
-                    binding,
-                    [float(pos[0]), float(pos[1]), float(pos[2])],
-                )
+                runtime.change_pos([float(pos[0]), float(pos[1]), float(pos[2])])
 
             rot = values.get("rot")
             if rot is not None and not isinstance(rot, RefBase):
-                self._set_root_rot(binding, rot)
+                runtime.change_rot(rot)
 
         mujoco.mj_forward(self.mj_model, data)
 
@@ -395,25 +399,6 @@ class MujocoRunner(IRunner):
             return
 
         raise SimulacBaseError(f"Unsupported build op: {type(op).__name__}")
-
-    def _set_root_pos(
-        self, binding: MujocoEntityBinding, pos: tuple[float, float, float]
-    ) -> None:
-        if binding.root_freejoint_id >= 0:
-            qadr = int(self.mj_model.jnt_qposadr[binding.root_freejoint_id])
-            self._require_data().qpos[qadr : qadr + 3] = list(pos)
-        else:
-            self.mj_model.body_pos[binding.root_body_id] = list(pos)
-
-    def _set_root_rot(
-        self, binding: MujocoEntityBinding, rot_xyzw: tuple[float, float, float]
-    ) -> None:
-        quat_wxyz = _xyzw_to_wxyz(euler_to_quat(*rot_xyzw))
-        if binding.root_freejoint_id >= 0:
-            qadr = int(self.mj_model.jnt_qposadr[binding.root_freejoint_id])
-            self._require_data().qpos[qadr + 3 : qadr + 7] = quat_wxyz
-        else:
-            self.mj_model.body_quat[binding.root_body_id] = quat_wxyz
 
     def _constraints_pass(self, candidate: dict[str, dict[str, Any]]) -> bool:
         for eid, values in candidate.items():

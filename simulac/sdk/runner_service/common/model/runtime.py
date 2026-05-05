@@ -5,12 +5,13 @@ from typing import Callable, Protocol, runtime_checkable
 
 @runtime_checkable
 class IStuffRuntimeOps(Protocol):
-    def set_pos(self, pos: tuple[float, float, float]) -> None: ...
-    def set_mass(self, mass: float) -> None: ...
-    def set_size(self, size: tuple[float, float, float]) -> None: ...
-    def set_fixed(self, is_fixed: bool) -> None: ...
-    def set_friction(self, friction: float) -> None: ...
-    def set_density(self, density: float) -> None: ...
+    def change_pos(self, pos: tuple[float, float, float]) -> None: ...
+    def change_rot(self, rot: tuple[float, float, float]) -> None: ...
+    def change_mass(self, mass: float) -> None: ...
+    def change_size(self, size: tuple[float, float, float]) -> None: ...
+    def change_fixed(self, is_fixed: bool) -> None: ...
+    def change_friction(self, friction: float) -> None: ...
+    def change_density(self, density: float) -> None: ...
 
 
 class StuffRuntime:
@@ -19,19 +20,22 @@ class StuffRuntime:
         self._ops = ops
 
     def change_pos(self, pos: tuple[float, float, float]) -> None:
-        self._ops.set_pos(pos)
+        self._ops.change_pos(pos)
+
+    def change_rot(self, rot: tuple[float, float, float]) -> None:
+        self._ops.change_rot(rot)
 
     def change_mass(self, mass: float) -> None:
-        self._ops.set_mass(mass)
+        self._ops.change_mass(mass)
 
     def change_size(self, size: tuple[float, float, float]) -> None:
-        self._ops.set_size(size)
+        self._ops.change_size(size)
 
     def change_fixed(self, is_fixed: bool) -> None:
-        self._ops.set_fixed(is_fixed)
+        self._ops.change_fixed(is_fixed)
 
     def change_friction(self, friction: float) -> None:
-        self._ops.set_friction(friction)
+        self._ops.change_friction(friction)
 
     def change_density(self, density: float) -> None:
-        self._ops.set_density(density)
+        self._ops.change_density(density)
